@@ -24,32 +24,28 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   return (
     <>
-      {/* --- Mobile Backdrop (Blur Effect) --- */}
-      {/* This only shows on mobile (lg:hidden) when the sidebar is open */}
+      {/* --- Mobile Backdrop --- */}
       <div
         className={cn(
-          "fixed inset-0 z-30 bg-black/20 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
+          "fixed inset-0 z-30 bg-black/30 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
-        onClick={() => setIsOpen(false)} // Close sidebar when tapping the blurred area
+        onClick={() => setIsOpen(false)}
       />
 
       {/* --- Sidebar Aside --- */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 bg-[#17321A] text-white transition-all duration-300 ease-in-out shadow-xl flex flex-col",
-          // Mobile: -translate-x-full (hidden) when closed. Desktop: Always visible (width changes)
+          // FIX 1: 'overflow-hidden' here locks the outer container size
+          "fixed inset-y-0 left-0 z-40 bg-[#17321A] text-white transition-all duration-300 ease-in-out shadow-xl flex flex-col overflow-hidden",
           isOpen ? "w-64 translate-x-0" : "w-20 -translate-x-full lg:translate-x-0"
         )}
       >
         {/* Logo Area */}
-        <div className="h-16 flex items-center justify-center border-b border-[#146939]/30 gap-2 overflow-hidden">
-          {/* Logo Icon */}
+        <div className="h-16 flex items-center justify-center border-b border-[#146939]/30 gap-2 overflow-hidden shrink-0">
           <LayoutDashboard className="h-6 w-6 text-[#4ade80] shrink-0" />
-          
-          {/* Logo Text - "SNS" (Hidden in mini mode) */}
           <div className={cn(
-            "font-montserrat font-bold text-xl transition-all duration-300 whitespace-nowrap",
+            "font-montserrat font-bold text-xl transition-all duration-300 whitespace-nowrap overflow-hidden",
             isOpen ? "w-auto opacity-100" : "w-0 opacity-0 hidden"
           )}>
             SNS
@@ -57,7 +53,11 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto custom-scrollbar">
+        {/* FIX 2: Removed 'overflow-y-auto' and 'custom-scrollbar'.
+            Added 'overflow-hidden'. 
+            The sidebar is now completely static. If the list is too long, it will be clipped. 
+        */}
+        <nav className="flex-1 py-6 px-3 space-y-2 overflow-hidden">
           {links.map((link) => {
             const Icon = link.icon
             const isActive = pathname === link.href
@@ -67,16 +67,16 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 key={link.href}
                 href={link.href}
                 onClick={() => {
-                  // Auto-close on mobile when a link is clicked
                   if (window.innerWidth < 1024) {
-                     setIsOpen(false) 
+                      setIsOpen(false) 
                   }
                 }}
                 className={cn(
                   "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative",
                   isActive 
                     ? "bg-[#146939] text-white shadow-md" 
-                    : "text-gray-300 hover:bg-[#146939]/50 hover:text-white"
+                    : "text-gray-300 hover:bg-[#146939]/50 hover:text-white",
+                  !isOpen && "justify-center"
                 )}
               >
                 <Icon className={cn("h-5 w-5 shrink-0 transition-transform", !isOpen && "mx-auto")} />
@@ -88,11 +88,13 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   {link.label}
                 </span>
 
-                {/* Tooltip for Mini Sidebar (Desktop only) */}
                 {!isOpen && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap hidden lg:block">
-                    {link.label}
-                  </div>
+                    <div className={cn(
+                      "absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 pointer-events-none transition-opacity z-50 whitespace-nowrap hidden",
+                      "lg:group-hover:opacity-100 lg:group-hover:block lg:block"
+                    )}>
+                      {link.label}
+                    </div>
                 )}
               </Link>
             )
@@ -100,7 +102,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         </nav>
 
         {/* Footer / Sign Out */}
-        <div className="p-4 border-t border-[#146939]/30">
+        <div className="p-4 border-t border-[#146939]/30 overflow-hidden shrink-0">
            <SignOutButton className={cn(
                "text-gray-300 hover:bg-[#146939]/50 hover:text-white justify-start w-full",
                !isOpen && "justify-center px-0"
@@ -113,7 +115,6 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   )
 }
 
-// Icon wrapper for mini-state sign out
 function LogOutIconOnly() {
     return (
         <svg 
