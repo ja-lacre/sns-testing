@@ -8,41 +8,33 @@ export default async function InputScoresPage({ params }: { params: Promise<{ id
   const { id } = await params
   const supabase = await createClient()
 
-  // 1. Fetch Exam Details
-  const { data: exam } = await supabase
-    .from('exams')
-    .select('*')
-    .eq('id', id)
-    .single()
-
+  // 1. Fetch Exam
+  const { data: exam } = await supabase.from('exams').select('*').eq('id', id).single()
   if (!exam) return notFound()
 
-  // 2. Fetch Class ID via code
-  const { data: classData } = await supabase
-    .from('classes')
-    .select('id')
-    .eq('code', exam.class_code)
-    .single()
-
+  // 2. Fetch Class ID
+  const { data: classData } = await supabase.from('classes').select('id').eq('code', exam.class_code).single()
   if (!classData) return notFound()
 
-  // 3. Fetch Students enrolled in that class
-  // Join with results table to get existing scores if any
+  // 3. Fetch Enrolled Students
   const { data: enrollments } = await supabase
     .from('enrollments')
-    .select(`
-      student:students(id, full_name, student_id)
-    `)
+    .select(`student:students(id, full_name, student_id, email)`)
     .eq('class_id', classData.id)
     .order('student(full_name)')
 
-  // 4. Fetch existing results for this exam
+  // 4. Fetch Existing Scores
   const { data: existingResults } = await supabase
     .from('results')
     .select('student_id, score')
     .eq('exam_id', id)
 
-  // Map scores to students
+  // 5. Fetch ALL Students (for the Add/Manage dialog)
+  const { data: allStudents } = await supabase
+    .from('students')
+    .select('id, full_name, email')
+    .order('full_name')
+
   const studentsWithScores = enrollments?.map((e: any) => {
     const scoreRecord = existingResults?.find(r => r.student_id === e.student.id)
     return {
@@ -53,8 +45,10 @@ export default async function InputScoresPage({ params }: { params: Promise<{ id
 
   return (
     <InputScoresContent 
-      exam={exam}
-      students={studentsWithScores}
+        exam={exam} 
+        students={studentsWithScores} 
+        allStudents={allStudents || []}
+        classId={classData.id}
     />
   )
 }

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from "react"
-import { Calendar, Users, CheckCircle, Loader2, Zap, Send } from "lucide-react"
+import { Calendar, Users, CheckCircle, Loader2, Send, Edit } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 interface Exam {
@@ -14,7 +15,6 @@ interface Exam {
   class_code: string
   date: string
   release_status: 'draft' | 'released'
-  auto_release: boolean
   student_count: number
 }
 
@@ -25,34 +25,10 @@ interface ExamReleaseCardProps {
 
 export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps) {
   const [loadingBtn, setLoadingBtn] = useState(false)
-  const [loadingToggle, setLoadingToggle] = useState(false)
-  
-  // Local state for immediate UI feedback before server refresh
-  const [autoReleaseState, setAutoReleaseState] = useState(exam.auto_release)
   
   const supabase = createClient()
   const router = useRouter()
   const isReleased = exam.release_status === 'released'
-
-  const handleToggleAutoRelease = async () => {
-    if (disabled || isReleased) return;
-    setLoadingToggle(true)
-    const newState = !autoReleaseState
-    setAutoReleaseState(newState) // Optimistic update
-
-    const { error } = await supabase
-      .from('exams')
-      .update({ auto_release: newState })
-      .eq('id', exam.id)
-
-    if (error) {
-      console.error("Error updating auto-release:", error)
-      setAutoReleaseState(!newState) // Revert on error
-    } else {
-      router.refresh()
-    }
-    setLoadingToggle(false)
-  }
 
   const handleReleaseNow = async () => {
     if (disabled || isReleased) return;
@@ -60,18 +36,15 @@ export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps
 
     setLoadingBtn(true)
     
-    // 1. Update status in DB
     const { error } = await supabase
       .from('exams')
       .update({ 
         release_status: 'released',
-        auto_release: false // Disable auto-release once manually released
       })
       .eq('id', exam.id)
 
     if (error) {
       console.error("Error releasing results:", error)
-      // Add toast notification here if you have one
     } else {
       router.refresh()
     }
@@ -83,7 +56,7 @@ export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps
       "group relative border shadow-sm transition-all duration-300 ease-out bg-white overflow-hidden rounded-2xl flex flex-col justify-between",
       disabled ? "border-gray-100 bg-gray-50/50" : "border-gray-100 hover:shadow-xl hover:-translate-y-2"
     )}>
-      {/* Top Gradient Line (Green if active, Gray if disabled) */}
+      {/* Top Gradient Line */}
       <div className={cn(
         "absolute top-0 left-0 w-full h-1.5 transition-opacity duration-300",
         disabled ? "bg-gray-200" : "bg-gradient-to-r from-[#146939] to-[#00954f] opacity-0 group-hover:opacity-100"
@@ -119,65 +92,41 @@ export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps
       </CardContent>
 
       <CardFooter className={cn(
-        "pt-4 pb-4 border-t border-gray-50 bg-gray-50/50 flex flex-col gap-4",
+        "pt-4 pb-4 border-t border-gray-50 bg-gray-50/50 flex gap-2", // Reduced gap to 2
         isReleased ? "opacity-80" : ""
       )}>
          
-         {/* Auto-Release Toggle Section */}
-         {!isReleased && (
-           <div className="flex items-center justify-between w-full rounded-xl bg-white border border-gray-100 p-3 shadow-sm">
-             <div className="flex items-center gap-2">
-               <Zap className={cn("h-4 w-4", autoReleaseState ? "text-amber-500" : "text-gray-400")} />
-               <label htmlFor={`auto-toggle-${exam.id}`} className="text-sm font-bold font-montserrat text-[#17321A] cursor-pointer">
-                 Auto-release
-               </label>
-             </div>
-             
-             {/* Custom Switch Implementation */}
-             <div className="relative inline-block w-10 h-6 align-middle select-none transition duration-200 ease-in">
-                <input 
-                    type="checkbox" 
-                    name={`auto-toggle-${exam.id}`} 
-                    id={`auto-toggle-${exam.id}`} 
-                    checked={autoReleaseState} 
-                    onChange={handleToggleAutoRelease}
-                    disabled={loadingToggle || disabled}
-                    className={cn("absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300 ease-in-out top-0.5 left-0.5", 
-                        loadingToggle ? "opacity-50" : "",
-                        autoReleaseState ? "border-[#146939] translate-x-4" : "border-gray-300"
-                    )}
-                />
-                <label 
-                    htmlFor={`auto-toggle-${exam.id}`} 
-                    className={cn("block overflow-hidden h-6 rounded-full cursor-pointer transition-all duration-300",
-                        autoReleaseState ? "bg-[#146939]" : "bg-gray-300"
-                    )}
-                ></label>
-            </div>
+         {/* Edit Scores Button - Flex 1 to share space */}
+         <Link href={`/dashboard/results/${exam.id}`} className="flex-1">
+            <Button 
+                disabled={disabled || isReleased}
+                variant="outline"
+                className="w-full border-gray-300 text-gray-700 hover:bg-white hover:text-[#146939] hover:border-[#146939] font-montserrat h-10 px-2 rounded-xl cursor-pointer text-xs font-bold"
+            >
+                <Edit className="mr-2 h-3.5 w-3.5" /> Edit
+            </Button>
+         </Link>
 
-           </div>
-         )}
-
-         {/* Main Action Button */}
+         {/* Release Button - Flex 1 to share space */}
          <Button 
            onClick={handleReleaseNow}
            disabled={disabled || isReleased || loadingBtn}
            className={cn(
-             "w-full font-montserrat h-11 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm font-bold cursor-pointer",
+             "flex-1 font-montserrat h-10 px-2 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs font-bold cursor-pointer",
              isReleased 
                ? "bg-gray-100 text-gray-500 shadow-none border border-gray-200 cursor-not-allowed" 
                : "bg-[#146939] hover:bg-[#00954f] text-white hover:shadow-lg hover:-translate-y-0.5"
            )}
          >
            {loadingBtn ? (
-             <Loader2 className="h-4 w-4 animate-spin" />
+             <Loader2 className="h-3.5 w-3.5 animate-spin" />
            ) : isReleased ? (
              <>
-               <CheckCircle className="h-4 w-4" /> Released
+               <CheckCircle className="h-3.5 w-3.5" /> Released
              </>
            ) : (
              <>
-               <Send className="h-4 w-4" /> Release Now
+               <Send className="h-3.5 w-3.5" /> Release
              </>
            )}
          </Button>

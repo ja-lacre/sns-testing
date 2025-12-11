@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 export default async function ResultsPage() {
   const supabase = await createClient()
 
-  // 1. Fetch Exams arranged by date
+  // 1. Fetch Exams
   const { data: examsData, error } = await supabase
     .from('exams')
     .select('*')
@@ -15,8 +15,7 @@ export default async function ResultsPage() {
 
   if (error) console.error("Error fetching exams:", error)
 
-  // 2. Fetch result counts for these exams to see which ones have scores
-  // We do this in a separate query for efficiency if there are many exams
+  // 2. Fetch result counts
   const examIds = examsData?.map(e => e.id) || []
   let examCounts: Record<string, number> = {}
   
@@ -26,24 +25,21 @@ export default async function ResultsPage() {
       .select('exam_id')
       .in('exam_id', examIds)
 
-    // Count results per exam
     results?.forEach(r => {
       examCounts[r.exam_id] = (examCounts[r.exam_id] || 0) + 1
     })
   }
 
-  // Combine data
   const formattedExams = examsData?.map(exam => ({
     ...exam,
     student_count: examCounts[exam.id] || 0
   })) || []
 
-  // Filter out exams that have 0 scores inputted
+  // Only show exams that have scores
   const readyExams = formattedExams.filter(e => e.student_count > 0)
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-200 pb-6">
         <div>
           <h1 className="text-4xl sm:text-5xl font-bold text-[#17321A] font-montserrat tracking-tight">

@@ -20,9 +20,20 @@ interface ManageStudentsDialogProps {
   classId: string
   className: string
   allStudents: Student[]
+  // New optional props for customization
+  title?: string
+  actionLabel?: string
 }
 
-export function ManageStudentsDialog({ open, onOpenChange, classId, className, allStudents }: ManageStudentsDialogProps) {
+export function ManageStudentsDialog({ 
+  open, 
+  onOpenChange, 
+  classId, 
+  className, 
+  allStudents,
+  title = "Manage Students", // Default value
+  actionLabel = "Enroll"     // Default value
+}: ManageStudentsDialogProps) {
   const [isMounted, setIsMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const [search, setSearch] = useState("")
@@ -67,6 +78,7 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
     const isEnrolled = enrolledStudentIds.has(studentId)
 
     if (isEnrolled) {
+      // Unenroll
       await supabase
         .from('enrollments')
         .delete()
@@ -76,6 +88,7 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
       newSet.delete(studentId)
       setEnrolledStudentIds(newSet)
     } else {
+      // Enroll
       await supabase
         .from('enrollments')
         .insert({ class_id: classId, student_id: studentId })
@@ -102,7 +115,6 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
-          // Updated rounded-xl to rounded-2xl
           "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform h-[80vh] flex flex-col",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
       )}>
@@ -113,11 +125,12 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
         {/* Header */}
         <div className="px-6 pt-8 pb-4 flex justify-between items-start shrink-0">
           <div>
+            {/* Dynamic Title */}
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
-              Manage Students
+              {title}
             </h2>
             <p className="text-sm text-gray-500 font-roboto mt-1">
-              Select students to enroll in <span className="font-semibold text-[#146939]">{className}</span>
+              Select students to add to <span className="font-semibold text-[#146939]">{className}</span>
             </p>
           </div>
           <button 
@@ -202,11 +215,11 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : isEnrolled ? (
                          <>
-                           <Check className="h-3 w-3 mr-1.5" /> Enrolled
+                           <Check className="h-3 w-3 mr-1.5" /> Added
                          </>
                       ) : (
                          <>
-                           <PlusCircle className="h-3 w-3 mr-1.5" /> Enroll
+                           <PlusCircle className="h-3 w-3 mr-1.5" /> {actionLabel}
                          </>
                       )}
                     </Button>
