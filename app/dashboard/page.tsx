@@ -4,7 +4,6 @@ import { RecentExamsCard } from "@/components/dashboard/recent-exams-card"
 import { QuickActionsCard } from "@/components/dashboard/quick-actions-card"
 import { createClient } from "@/utils/supabase/server"
 
-// Force dynamic rendering so data is always fresh
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
@@ -14,15 +13,21 @@ export default async function DashboardPage() {
   const [
     { count: studentsCount },
     { count: classesCount },
-    { count: resultsCount },
+    { count: pendingResultsCount }, // Results that are pending
     { count: examsCount },
     { data: recentExams }
   ] = await Promise.all([
     supabase.from('students').select('*', { count: 'exact', head: true }),
+    
     supabase.from('classes').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    
+    // Counting results where status is pending (needs grading)
     supabase.from('results').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    
     supabase.from('exams').select('*', { count: 'exact', head: true }),
-    supabase.from('exams').select('*').order('date', { ascending: false }).limit(3)
+    
+    // Fetch 4 most recent exams
+    supabase.from('exams').select('*').order('date', { ascending: false }).limit(4)
   ])
 
   return (
@@ -46,7 +51,7 @@ export default async function DashboardPage() {
       <StatsOverview 
         totalStudents={studentsCount || 0}
         activeClasses={classesCount || 0}
-        pendingResults={resultsCount || 0}
+        pendingResults={pendingResultsCount || 0}
         examsManaged={examsCount || 0}
       />
 

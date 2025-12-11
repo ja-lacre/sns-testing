@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface ImportStudentsDialogProps {
   open: boolean
@@ -23,6 +24,7 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
   
   const router = useRouter()
   const supabase = createClient()
+  const { addToast } = useToast()
 
   useEffect(() => {
     if (open) {
@@ -51,17 +53,15 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
     const lines = text.split('\n')
     const students = []
     
-    // Skip header row if present (simple check)
+    // Skip header if present (basic check)
     const startIndex = lines[0].toLowerCase().includes('email') ? 1 : 0
 
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i].trim()
       if (!line) continue
       
-      // Simple CSV split (handling standard comma separation)
       const parts = line.split(',').map(p => p.trim())
       
-      // Expected format: student_id, full_name, email
       if (parts.length >= 2) {
         students.push({
           student_id: parts[0],
@@ -97,9 +97,9 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
       }
 
       setSuccessCount(students.length)
+      addToast(`Successfully imported ${students.length} students!`, "success")
       router.refresh()
       
-      // Close after short delay on success
       setTimeout(() => {
         onOpenChange(false)
       }, 1500)
@@ -107,6 +107,7 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
     } catch (err: any) {
       console.error(err)
       setError(err.message || "Failed to import students.")
+      addToast("Failed to import students.", "error")
     } finally {
       setLoading(false)
     }

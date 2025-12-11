@@ -1,52 +1,47 @@
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+'use client'
+
+import { PlusCircle, Users, FileText, ArrowRight } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, CheckCircle, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export function QuickActionsCard() {
   return (
-    <Card className="md:col-span-3 lg:col-span-2 bg-gradient-to-b from-[#146939] to-[#17321A] text-white border-none shadow-xl relative overflow-hidden flex flex-col justify-between">
-      {/* Decorative Elements - Removed the white light div */}
-      <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-black rounded-full opacity-10 blur-2xl"></div>
-      
-      <CardHeader className="relative z-10">
-        <CardTitle className="font-montserrat text-xl font-bold tracking-wide">Quick Actions</CardTitle>
-        <CardDescription className="text-gray-100 font-roboto text-xs border-l-2 border-white/50 pl-2 mt-1">Manage your workflow efficiently.</CardDescription>
+    <Card className="md:col-span-3 lg:col-span-2 border border-gray-200 shadow-sm bg-white rounded-2xl h-full">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold text-[#17321A] font-montserrat">Quick Actions</CardTitle>
       </CardHeader>
-      
-      <CardContent className="grid gap-4 relative z-10">
-         <Link href="/dashboard/exams/new" className="w-full">
-            <Button className="w-full justify-between bg-white hover:bg-gray-50 text-[#17321A] font-bold font-montserrat h-12 shadow-sm group cursor-pointer border-none">
-                Create New Exam 
-                <PlusCircle className="h-5 w-5 text-[#00954f] group-hover:scale-110 transition-transform" />
+      <CardContent className="space-y-4">
+        <Link href="/dashboard/exams" className="block w-full">
+            <Button 
+                className="w-full justify-start bg-[#146939] hover:bg-[#00954f] text-white font-montserrat h-12 rounded-xl shadow-md hover:shadow-lg transition-all group"
+            >
+                <PlusCircle className="mr-3 h-5 w-5" />
+                <span className="flex-1 text-left">Create New Exam</span>
+                <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
-         </Link>
-         
-         <Link href="/dashboard/results" className="w-full">
-            <Button variant="outline" className="w-full justify-between bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white hover:border-white font-montserrat h-12 cursor-pointer">
-                Send Scores 
-                <CheckCircle className="h-5 w-5 opacity-70" />
-            </Button>
-         </Link>
+        </Link>
 
-         <Link href="/dashboard/reports" className="w-full">
-            <Button variant="ghost" className="w-full justify-start px-0 text-gray-200 hover:text-white hover:bg-transparent font-roboto text-xs uppercase tracking-wider cursor-pointer">
-                View Reports <ArrowRight className="h-3 w-3 ml-2" />
+        <Link href="/dashboard/students" className="block w-full">
+            <Button 
+                variant="outline" 
+                className="w-full justify-start border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-[#17321A] hover:border-[#146939] font-montserrat h-12 rounded-xl transition-all group"
+            >
+                <Users className="mr-3 h-5 w-5 text-gray-500 group-hover:text-[#146939]" />
+                <span className="flex-1 text-left">Add Student</span>
             </Button>
-         </Link>
+        </Link>
+
+        <Link href="/dashboard/classes" className="block w-full">
+            <Button 
+                variant="outline" 
+                className="w-full justify-start border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-[#17321A] hover:border-[#146939] font-montserrat h-12 rounded-xl transition-all group"
+            >
+                <FileText className="mr-3 h-5 w-5 text-gray-500 group-hover:text-[#146939]" />
+                <span className="flex-1 text-left">Manage Classes</span>
+            </Button>
+        </Link>
       </CardContent>
-
-      <div className="relative z-10 p-6 pt-0">
-         <div className="p-3 rounded-lg bg-black/20 backdrop-blur-sm border border-white/10">
-            <h4 className="font-bold text-xs mb-1 font-montserrat text-white flex items-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-white mr-2"></span>
-                Tip of the day
-            </h4>
-            <p className="text-[10px] text-gray-100 font-roboto leading-relaxed opacity-90">
-                Bulk-import student scores using CSV format in the Students tab to save time.
-            </p>
-         </div>
-      </div>
     </Card>
   )
 }

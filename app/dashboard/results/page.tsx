@@ -15,27 +15,51 @@ export default async function ResultsPage() {
 
   if (error) console.error("Error fetching exams:", error)
 
-  // 2. Fetch result counts
-  const examIds = examsData?.map(e => e.id) || []
-  let examCounts: Record<string, number> = {}
-  
-  if (examIds.length > 0) {
-    const { data: results } = await supabase
-      .from('results')
-      .select('exam_id')
-      .in('exam_id', examIds)
+  // 2. Calculate Counts (Graded vs Total Enrolled)
+  const formattedExams = await Promise.all(
+    (examsData || []).map(async (exam) => {
+      
+      // Get Class ID
+      const { data: classData } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('code', exam.class_code)
+        .single()
 
-    results?.forEach(r => {
-      examCounts[r.exam_id] = (examCounts[r.exam_id] || 0) + 1
+      if (!classData) return { ...exam, student_count: 0, total_students: 0 }
+
+      // A. Get List of CURRENTLY Enrolled Student IDs
+      const { data: enrolledStudents } = await supabase
+        .from('enrollments')
+        .select('student_id')
+        .eq('class_id', classData.id)
+
+      const enrolledIds = enrolledStudents?.map(e => e.student_id) || []
+      const totalEnrolled = enrolledIds.length
+
+      // B. Get Results ONLY for currently enrolled students
+      // We assume if no enrolled students, count is 0
+      let validGradedCount = 0
+      
+      if (totalEnrolled > 0) {
+        const { count } = await supabase
+          .from('results')
+          .select('*', { count: 'exact', head: true })
+          .eq('exam_id', exam.id)
+          .in('student_id', enrolledIds) // CRITICAL FIX: Only count if student is still enrolled
+        
+        validGradedCount = count || 0
+      }
+
+      return {
+        ...exam,
+        student_count: validGradedCount, 
+        total_students: totalEnrolled
+      }
     })
-  }
+  )
 
-  const formattedExams = examsData?.map(exam => ({
-    ...exam,
-    student_count: examCounts[exam.id] || 0
-  })) || []
-
-  // Only show exams that have scores
+  // Only show exams that have at least one grade input
   const readyExams = formattedExams.filter(e => e.student_count > 0)
 
   return (
