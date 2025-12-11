@@ -36,7 +36,12 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // 1. If user is NOT logged in and trying to access a protected page, redirect to login
-  if (!user && !request.nextUrl.pathname.startsWith('/login')) {
+  if (!user && 
+      !request.nextUrl.pathname.startsWith('/login') && 
+      !request.nextUrl.pathname.startsWith('/auth') &&  // Allow auth callback routes
+      !request.nextUrl.pathname.startsWith('/forgot-password') // <--- ADD THIS LINE
+  ) {
+    // ... then redirect to login
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
