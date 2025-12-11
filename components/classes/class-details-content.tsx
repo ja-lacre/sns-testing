@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from "react"
-import { ArrowLeft, Users, Search, MoreVertical, FileText, Settings, Calendar, Award } from "lucide-react"
+import { ArrowLeft, Users, Search, MoreVertical, FileText, Settings, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { ClassFormDialog } from "./class-form-dialog"
+import { ManageStudentsDialog } from "./manage-students-dialog"
 
 interface Student {
   id: string
@@ -25,10 +27,13 @@ interface ClassDetails {
 interface ClassDetailsContentProps {
   classData: ClassDetails
   students: Student[]
+  allStudents: Student[]
 }
 
-export function ClassDetailsContent({ classData, students }: ClassDetailsContentProps) {
+export function ClassDetailsContent({ classData, students, allStudents }: ClassDetailsContentProps) {
   const [search, setSearch] = useState("")
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isManageOpen, setIsManageOpen] = useState(false)
 
   const filteredStudents = students.filter(s => 
     s.full_name.toLowerCase().includes(search.toLowerCase()) || 
@@ -36,7 +41,7 @@ export function ClassDetailsContent({ classData, students }: ClassDetailsContent
   )
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10 max-w-5xl mx-auto">
       
       {/* --- Breadcrumb & Header --- */}
       <div>
@@ -66,10 +71,14 @@ export function ClassDetailsContent({ classData, students }: ClassDetailsContent
           </div>
           
           <div className="flex gap-3">
-             <Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50 font-montserrat rounded-xl h-11">
+             <Button 
+                variant="outline" 
+                onClick={() => setIsEditOpen(true)}
+                className="border-gray-200 text-gray-700 hover:bg-gray-50 font-montserrat rounded-xl h-11 cursor-pointer"
+             >
                 <Settings className="mr-2 h-4 w-4" /> Class Settings
              </Button>
-             <Button className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat rounded-xl h-11 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+             <Button className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat rounded-xl h-11 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer">
                 <FileText className="mr-2 h-4 w-4" /> Create Exam
              </Button>
           </div>
@@ -79,18 +88,27 @@ export function ClassDetailsContent({ classData, students }: ClassDetailsContent
         <div className="h-px w-full bg-gray-200 mt-6"></div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* --- Left Column: Student List --- */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
-            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-gray-50 pt-6 px-6">
-               <CardTitle className="text-lg font-bold text-[#17321A] font-montserrat flex items-center gap-2">
-                 <Users className="h-5 w-5 text-[#00954f]" />
-                 Enrolled Students
-               </CardTitle>
-               
-               <div className="relative w-64 hidden sm:block">
+      {/* --- Main Content: Student List --- */}
+      <div className="space-y-6">
+        <Card className="border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
+          
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-50 pt-6 px-6">
+             <div className="flex items-center gap-4">
+                <div className="p-2 bg-[#e6f4ea] rounded-full text-[#146939]">
+                    <Users className="h-5 w-5" />
+                </div>
+                <div>
+                    <CardTitle className="text-lg font-bold text-[#17321A] font-montserrat">
+                        Enrolled Students
+                    </CardTitle>
+                    <p className="text-xs text-gray-500 font-roboto mt-0.5">
+                        Manage student access and details
+                    </p>
+                </div>
+             </div>
+             
+             <div className="flex items-center gap-3 w-full sm:w-auto">
+               <div className="relative flex-1 sm:w-64">
                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                  <Input 
                    placeholder="Search students..." 
@@ -99,112 +117,93 @@ export function ClassDetailsContent({ classData, students }: ClassDetailsContent
                    className="pl-9 h-10 bg-gray-50 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] rounded-xl" 
                  />
                </div>
-            </CardHeader>
-            <CardContent className="p-0">
-               <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-                 {filteredStudents.length === 0 ? (
-                    <div className="p-12 text-center text-gray-500 font-roboto flex flex-col items-center">
-                      <Users className="h-10 w-10 opacity-20 mb-3" />
-                      <p>No students found.</p>
+               
+               <Button 
+                 onClick={() => setIsManageOpen(true)}
+                 className="bg-[#17321A] hover:bg-[#146939] text-white rounded-xl h-10 px-4 font-montserrat text-xs shadow-md cursor-pointer whitespace-nowrap"
+               >
+                 <UserPlus className="h-4 w-4 sm:mr-2" /> 
+                 <span className="hidden sm:inline">Add Student</span>
+               </Button>
+             </div>
+          </CardHeader>
+
+          <CardContent className="p-0">
+             <div className="min-h-[300px]">
+               {filteredStudents.length === 0 ? (
+                  <div className="p-12 text-center text-gray-500 font-roboto flex flex-col items-center justify-center h-64">
+                    <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <Users className="h-8 w-8 opacity-20 text-gray-400" />
                     </div>
-                 ) : (
-                   <div className="divide-y divide-gray-50">
-                     {filteredStudents.map((student) => (
-                       <div key={student.id} className="p-4 px-6 flex items-center justify-between hover:bg-[#e6f4ea]/30 transition-colors group">
-                          <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#146939] to-[#00954f] flex items-center justify-center text-white font-bold font-montserrat text-sm shadow-sm">
-                              {student.full_name.charAt(0)}
-                            </div>
-                            <div>
-                               <p className="font-semibold text-[#17321A] font-montserrat text-sm">{student.full_name}</p>
-                               <p className="text-xs text-gray-500 font-roboto">{student.email || 'No email provided'}</p>
-                            </div>
+                    <p className="text-lg font-medium text-gray-600">No students found</p>
+                    <p className="text-sm text-gray-400 mt-1">Try searching for a different name or add a new student.</p>
+                    <Button 
+                        variant="link" 
+                        onClick={() => setIsManageOpen(true)}
+                        className="text-[#146939] mt-2 font-montserrat"
+                    >
+                        Enroll students now
+                    </Button>
+                  </div>
+               ) : (
+                 <div className="divide-y divide-gray-50">
+                   {filteredStudents.map((student) => (
+                     <div key={student.id} className="p-4 px-6 flex items-center justify-between hover:bg-[#e6f4ea]/30 transition-colors group">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#146939] to-[#00954f] flex items-center justify-center text-white font-bold font-montserrat text-sm shadow-sm ring-2 ring-white">
+                            {student.full_name.charAt(0)}
                           </div>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#146939] rounded-full h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-xl">
-                              <DropdownMenuItem className="cursor-pointer font-roboto">View Profile</DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer font-roboto">Message</DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer font-roboto text-red-600 focus:text-red-700 focus:bg-red-50">Remove</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                       </div>
-                     ))}
-                   </div>
-                 )}
-               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* --- Right Column: Stats & Activity --- */}
-        <div className="space-y-6">
-           
-           {/* Class Performance Card */}
-           <Card className="bg-gradient-to-b from-[#146939] to-[#17321A] text-white border-none shadow-xl relative overflow-hidden rounded-2xl">
-              {/* Decorative Orbs */}
-              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-[#00954f] rounded-full opacity-20 blur-2xl pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-black rounded-full opacity-20 blur-2xl pointer-events-none"></div>
-              
-              <CardHeader className="relative z-10 pb-2">
-                <CardTitle className="font-montserrat text-lg flex items-center gap-2">
-                  <Award className="h-5 w-5 text-[#00954f]" />
-                  Class Performance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5 relative z-10 pt-4">
-                <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                  <span className="text-gray-200 text-sm font-roboto">Average Score</span>
-                  <span className="text-2xl font-bold font-montserrat">87%</span>
-                </div>
-                <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                  <span className="text-gray-200 text-sm font-roboto">Attendance</span>
-                  <span className="text-2xl font-bold font-montserrat">94%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-200 text-sm font-roboto">Pending Grading</span>
-                  <span className="text-xl font-bold font-montserrat text-amber-400">12</span>
-                </div>
-              </CardContent>
-           </Card>
-
-           {/* Recent Activity Card */}
-           <Card className="border-gray-100 shadow-sm rounded-2xl bg-white">
-             <CardHeader className="pb-3 pt-6 px-6">
-               <CardTitle className="text-md font-bold text-[#17321A] font-montserrat flex items-center gap-2">
-                 <Calendar className="h-4 w-4 text-gray-400" />
-                 Recent Activity
-               </CardTitle>
-             </CardHeader>
-             <CardContent className="px-6 pb-6">
-               <div className="space-y-0 relative">
-                 {/* Timeline Line */}
-                 <div className="absolute left-2.5 top-2 bottom-2 w-px bg-gray-100"></div>
-
-                 {[1, 2, 3].map((i) => (
-                   <div key={i} className="flex gap-4 relative py-3 group">
-                     <div className="h-5 w-5 rounded-full bg-white border-2 border-[#e6f4ea] group-hover:border-[#00954f] shrink-0 z-10 flex items-center justify-center transition-colors">
-                        <div className="h-1.5 w-1.5 rounded-full bg-[#00954f]" />
+                          <div>
+                             <p className="font-semibold text-[#17321A] font-montserrat text-sm">{student.full_name}</p>
+                             <p className="text-xs text-gray-500 font-roboto">{student.email || 'No email provided'}</p>
+                          </div>
+                        </div>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#146939] hover:bg-[#e6f4ea] rounded-lg h-8 w-8 p-0 transition-all cursor-pointer">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl border-gray-100 shadow-lg">
+                            <DropdownMenuItem className="cursor-pointer font-roboto text-gray-600 focus:text-[#146939] focus:bg-[#e6f4ea] rounded-lg m-1">View Profile</DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer font-roboto text-gray-600 focus:text-[#146939] focus:bg-[#e6f4ea] rounded-lg m-1">Message</DropdownMenuItem>
+                            <div className="h-px bg-gray-100 my-1" />
+                            <DropdownMenuItem className="cursor-pointer font-roboto text-red-600 focus:text-red-700 focus:bg-red-50 rounded-lg m-1">Remove</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                      </div>
-                     <div>
-                       <p className="text-[#17321A] font-semibold text-sm font-montserrat group-hover:text-[#00954f] transition-colors">
-                         New assignment posted
-                       </p>
-                       <p className="text-xs text-gray-500 font-roboto mt-0.5">2 hours ago</p>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-             </CardContent>
-           </Card>
-        </div>
-
+                   ))}
+                 </div>
+               )}
+             </div>
+          </CardContent>
+          
+          {/* Footer stats or pagination if needed later */}
+          <div className="bg-gray-50/50 p-3 border-t border-gray-100 text-center text-xs text-gray-400 font-roboto">
+            Showing {filteredStudents.length} of {students.length} students
+          </div>
+        </Card>
       </div>
+
+      {/* --- Dialogs --- */}
+      
+      {/* Edit Class Dialog */}
+      <ClassFormDialog 
+        open={isEditOpen} 
+        onOpenChange={setIsEditOpen} 
+        classToEdit={classData}
+      />
+
+      {/* Add/Manage Students Dialog */}
+      <ManageStudentsDialog
+        open={isManageOpen}
+        onOpenChange={setIsManageOpen}
+        classId={classData.id}
+        className={classData.name}
+        allStudents={allStudents}
+      />
+
     </div>
   )
 }
