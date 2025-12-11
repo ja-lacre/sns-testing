@@ -27,7 +27,7 @@ interface Exam {
   date: string
   release_status: 'draft' | 'released'
   class_id?: string
-  total_score?: number // Added field
+  total_score?: number
 }
 
 interface InputScoresContentProps {
@@ -52,7 +52,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
   // Default to 100 if undefined
   const maxScore = exam.total_score || 100
 
-  // Sync local state with props
+  // Sync local state with props whenever 'students' list updates
   useEffect(() => {
     setScores(prevScores => {
       const newScores: Record<string, string> = {}
@@ -69,7 +69,6 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
 
   const handleScoreChange = (studentId: string, val: string) => {
     if (val === '' || /^\d+$/.test(val)) {
-        // Validation: Don't allow values higher than maxScore
         if (val !== '' && parseInt(val) > maxScore) return
         setScores(prev => ({ ...prev, [studentId]: val }))
     }
@@ -84,6 +83,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
       score: score === '' ? null : parseInt(score),
     }))
 
+    // Temporary delete + insert, assumes small dataset for simplicity
     await supabase.from('results').delete().eq('exam_id', exam.id)
     const { error } = await supabase.from('results').insert(upserts)
 
@@ -99,29 +99,39 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
 
   const handleRelease = async () => {
     const filledScores = Object.values(scores).filter(s => s !== '').length
-    if (!confirm(`Are you sure you want to release these results? \n\n${filledScores} students will receive their scores immediately.`)) return
+    if (!confirm(`Are you sure you want to release these results? \n\n${filledScores} students will receive their scores via email immediately.`)) return
 
     setReleasing(true)
+    
     await handleSave()
 
-    const { error } = await supabase
-      .from('exams')
-      .update({ release_status: 'released', auto_release: false })
-      .eq('id', exam.id)
+    try {
+      const response = await fetch('/api/release-results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examId: exam.id }),
+      })
 
-    if (error) {
-      console.error("Error releasing:", error)
-      addToast("Failed to release results.", "error")
-    } else {
-      addToast("Results released successfully.", "success")
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send emails')
+      }
+
+      addToast("Results released and emails sent successfully!", "success")
       setIsReleased(true)
       router.refresh()
+    } catch (error: any) {
+      console.error("Error releasing:", error)
+      addToast(error.message, "error")
+    } finally {
+      setReleasing(false)
     }
-    setReleasing(false)
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in pb-10 max-w-5xl mx-auto">
+    // PRIMARY FIX: Added overflow-x-hidden here to contain any potential overflow
+    <div className="space-y-8 animate-in fade-in pb-10 max-w-5xl mx-auto w-full overflow-x-hidden">
       
       {/* Header */}
       <div>
@@ -142,11 +152,12 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
             <p className="text-gray-500 font-roboto mt-1">Input scores for <span className="font-semibold text-[#17321A]">{exam.class_code}</span></p>
           </div>
           
+          {/* Action Buttons: Stacked on mobile */}
           <div className="flex flex-wrap gap-3 w-full lg:w-auto">
             <Button 
                 variant="outline"
                 onClick={() => setIsManageOpen(true)}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-montserrat h-11 px-4 rounded-xl cursor-pointer"
+                className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-gray-50 font-montserrat h-11 px-4 rounded-xl cursor-pointer justify-center"
             >
               <UserPlus className="mr-2 h-4 w-4" /> Add Students
             </Button>
@@ -154,7 +165,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
             <Button 
                 onClick={handleSave} 
                 disabled={saving || isReleased} 
-                className="bg-white border border-[#146939] text-[#146939] hover:bg-[#e6f4ea] font-montserrat h-11 px-6 rounded-xl shadow-sm cursor-pointer"
+                className="w-full sm:w-auto bg-white border border-[#146939] text-[#146939] hover:bg-[#e6f4ea] font-montserrat h-11 px-6 rounded-xl shadow-sm cursor-pointer justify-center"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="mr-2 h-4 w-4" />}
               {saving ? 'Saving...' : 'Save Draft'}
@@ -164,7 +175,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
                 <Button 
                     onClick={handleRelease} 
                     disabled={releasing || saving} 
-                    className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat h-11 px-6 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    className="w-full sm:w-auto bg-[#146939] hover:bg-[#00954f] text-white font-montserrat h-11 px-6 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer justify-center"
                 >
                 {releasing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="mr-2 h-4 w-4" />}
                 Release Results
@@ -176,53 +187,61 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
 
       {/* Score Card */}
       <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
-        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider font-montserrat">
-          <span>Student List ({students.length})</span>
-          {/* Dynamic Header */}
-          <span className="pr-8">Score (0 - {maxScore})</span>
-        </div>
         
-        <div className="divide-y divide-gray-50 max-h-[60vh] overflow-y-auto custom-scrollbar">
-          {students.length === 0 ? (
-             <div className="p-12 text-center text-gray-400 font-roboto">
-                <p>No students enrolled in this class yet.</p>
-                <Button variant="link" onClick={() => setIsManageOpen(true)} className="text-[#146939]">Add students now</Button>
-             </div>
-          ) : (
-            students.map((student) => (
-                <div key={student.id} className="flex items-center justify-between px-6 py-4 hover:bg-[#e6f4ea]/20 transition-colors group">
-                <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#146939] to-[#00954f] flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-white group-hover:scale-105 transition-transform">
-                    {student.full_name.charAt(0)}
+        {/* Horizontal Scroll Wrapper (The Fix) */}
+        {/* We use w-full and overflow-x-auto. The min-w-[500px] inside forces the scroll */}
+        <div className="overflow-x-auto w-full"> 
+            
+            {/* Header Row (Table Head) - Must have min-w to force scroll */}
+            <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider font-montserrat min-w-[500px]">
+              <span>Student List ({students.length})</span>
+              <span className="pr-8">Score (0 - {maxScore})</span>
+            </div>
+            
+            {/* Student List (Table Body) */}
+            <div className="divide-y divide-gray-50 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              {students.length === 0 ? (
+                 <div className="p-12 text-center text-gray-400 font-roboto">
+                    <p>No students enrolled in this class yet.</p>
+                    <Button variant="link" onClick={() => setIsManageOpen(true)} className="text-[#146939]">Add students now</Button>
+                 </div>
+              ) : (
+                students.map((student) => (
+                    // Row must also respect min-w
+                    <div key={student.id} className="flex items-center justify-between px-6 py-4 hover:bg-[#e6f4ea]/20 transition-colors group min-w-[500px]">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#146939] to-[#00954f] flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-white group-hover:scale-105 transition-transform">
+                        {student.full_name.charAt(0)}
+                        </div>
+                        <div>
+                        <p className="font-bold text-[#17321A] font-montserrat">{student.full_name}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
+                            <span>{student.student_id || 'No ID'}</span>
+                            <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                            <span className="truncate max-w-[150px]">{student.email}</span>
+                        </div>
+                        </div>
                     </div>
-                    <div>
-                    <p className="font-bold text-[#17321A] font-montserrat">{student.full_name}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
-                        <span>{student.student_id || 'No ID'}</span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                        <span className="truncate max-w-[150px]">{student.email}</span>
+                    
+                    <div className="w-24 relative">
+                        <Input 
+                        type="number" 
+                        min="0" 
+                        max={maxScore}
+                        disabled={isReleased}
+                        placeholder="-"
+                        value={scores[student.id] || ''}
+                        onChange={(e) => handleScoreChange(student.id, e.target.value)}
+                        className={cn(
+                            "text-center font-mono font-bold text-lg border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] rounded-xl h-12 bg-gray-50/30 transition-all",
+                            scores[student.id] !== '' ? "bg-[#e6f4ea]/50 border-[#146939]/30 text-[#146939]" : ""
+                        )}
+                        />
                     </div>
                     </div>
-                </div>
-                
-                <div className="w-24 relative">
-                    <Input 
-                    type="number" 
-                    min="0" 
-                    max={maxScore} // Dynamic Max
-                    disabled={isReleased}
-                    placeholder="-"
-                    value={scores[student.id] || ''}
-                    onChange={(e) => handleScoreChange(student.id, e.target.value)}
-                    className={cn(
-                        "text-center font-mono font-bold text-lg border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] rounded-xl h-12 bg-gray-50/30 transition-all",
-                        scores[student.id] !== '' ? "bg-[#e6f4ea]/50 border-[#146939]/30 text-[#146939]" : ""
-                    )}
-                    />
-                </div>
-                </div>
-            ))
-          )}
+                ))
+              )}
+            </div>
         </div>
       </Card>
 

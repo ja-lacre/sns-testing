@@ -23,7 +23,7 @@ interface ManageStudentsDialogProps {
   allStudents: Student[]
   title?: string
   actionLabel?: string
-  onDataChange?: () => void // New Prop
+  onDataChange?: () => void
 }
 
 export function ManageStudentsDialog({ 
@@ -103,7 +103,7 @@ export function ManageStudentsDialog({
     
     setProcessingId(null)
     router.refresh()
-    if (onDataChange) onDataChange() // Trigger parent update
+    if (onDataChange) onDataChange()
   }
 
   const filteredStudents = allStudents.filter(s => 
@@ -115,17 +115,18 @@ export function ManageStudentsDialog({
 
   return (
     <div className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
+        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
-          "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform h-[80vh] flex flex-col",
+          "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform flex flex-col max-h-[90vh] mx-4",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
       )}>
+        
         {/* Top Green Accent Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
-        {/* Header */}
+        {/* Header (Shrink-0) */}
         <div className="px-6 pt-8 pb-4 flex justify-between items-start shrink-0">
           <div>
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
@@ -137,14 +138,14 @@ export function ManageStudentsDialog({
           </div>
           <button 
             onClick={() => onOpenChange(false)} 
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer -mr-2 -mt-2"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="px-6 pb-4">
+        {/* Search Bar (Shrink-0) */}
+        <div className="px-6 pb-4 shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input 
@@ -156,7 +157,7 @@ export function ManageStudentsDialog({
           </div>
         </div>
 
-        {/* Student List */}
+        {/* Student List (Flex-1 for Scrolling) */}
         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
           {loading ? (
              <div className="flex flex-col justify-center items-center h-full text-gray-400 gap-2">

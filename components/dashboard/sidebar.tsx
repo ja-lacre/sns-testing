@@ -1,125 +1,131 @@
 'use client'
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Users, GraduationCap, FileSpreadsheet, LogOut, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { createClient } from "@/utils/supabase/client"
-import { SignOutButton } from "./sign-out-button"
-
-const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "My Classes", href: "/dashboard/classes", icon: BookOpen },
-  { label: "Students", href: "/dashboard/students", icon: Users },
-  { label: "Exams", href: "/dashboard/exams", icon: GraduationCap },
-  { label: "Send Results", href: "/dashboard/results", icon: FileSpreadsheet },
-]
+import { LayoutDashboard, Users, BookOpen, FileText, BarChart2, LogOut } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { SignOutButton } from "@/components/dashboard/sign-out-button"
 
 interface SidebarProps {
   isOpen: boolean
-  onClose: () => void
+  setIsOpen: (value: boolean | ((prev: boolean) => boolean)) => void
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error('Error signing out:', error)
-    }
-    
-    router.push("/login")
-    router.refresh()
-  }
+  const links = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/students", label: "Students", icon: Users },
+    { href: "/dashboard/classes", label: "Classes", icon: BookOpen },
+    { href: "/dashboard/exams", label: "Exams", icon: FileText },
+    { href: "/dashboard/results", label: "Send Results", icon: BarChart2 },
+  ]
 
   return (
     <>
-      {/* Backdrop for Mobile Only */}
-      <div 
+      {/* --- Mobile Backdrop (Blur Effect) --- */}
+      {/* This only shows on mobile (lg:hidden) when the sidebar is open */}
+      <div
         className={cn(
-          "fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm transition-opacity duration-300",
+          "fixed inset-0 z-30 bg-black/20 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
-        onClick={onClose}
+        onClick={() => setIsOpen(false)} // Close sidebar when tapping the blurred area
       />
 
-      <aside 
+      {/* --- Sidebar Aside --- */}
+      <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-[#146939] to-[#17321A] text-white transition-transform duration-300 ease-in-out flex flex-col shadow-2xl border-r border-[#146939]",
-          // Slide completely in or out based on isOpen state
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-40 bg-[#17321A] text-white transition-all duration-300 ease-in-out shadow-xl flex flex-col",
+          // Mobile: -translate-x-full (hidden) when closed. Desktop: Always visible (width changes)
+          isOpen ? "w-64 translate-x-0" : "w-20 -translate-x-full lg:translate-x-0"
         )}
       >
-        
-        {/* --- Header Section --- */}
-        <div className="p-8 border-b border-[#146939]/50 flex flex-col items-center justify-center relative overflow-hidden group">
-          {/* Decorative background glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-[#00954f] rounded-full opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-700"></div>
+        {/* Logo Area */}
+        <div className="h-16 flex items-center justify-center border-b border-[#146939]/30 gap-2 overflow-hidden">
+          {/* Logo Icon */}
+          <LayoutDashboard className="h-6 w-6 text-[#4ade80] shrink-0" />
           
-          <div className="relative z-10 flex flex-col items-center gap-3">
-              <div className="p-3 bg-[#146939]/30 rounded-2xl border border-[#146939] shadow-inner group-hover:scale-105 transition-transform duration-300">
-                  <LayoutDashboard className="h-8 w-8 text-[#00954f]" />
-              </div>
-              <div className="text-center">
-                  <h1 className="font-trajan text-3xl font-bold tracking-[0.15em] text-white leading-tight">
-                      SNS
-                  </h1>
-                  <p className="text-[10px] text-[#00954f] font-montserrat uppercase tracking-[0.25em] font-bold mt-1">
-                      Teacher Portal
-                  </p>
-              </div>
+          {/* Logo Text - "SNS" (Hidden in mini mode) */}
+          <div className={cn(
+            "font-montserrat font-bold text-xl transition-all duration-300 whitespace-nowrap",
+            isOpen ? "w-auto opacity-100" : "w-0 opacity-0 hidden"
+          )}>
+            SNS
           </div>
         </div>
 
-        {/* --- Navigation --- */}
-        <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
+        {/* Nav Links */}
+        <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto custom-scrollbar">
+          {links.map((link) => {
+            const Icon = link.icon
+            const isActive = pathname === link.href
+
             return (
               <Link
-                key={item.href}
-                href={item.href}
-                // Auto-close on mobile when clicking a link
+                key={link.href}
+                href={link.href}
                 onClick={() => {
-                  if (window.innerWidth < 768) {
-                    onClose()
+                  // Auto-close on mobile when a link is clicked
+                  if (window.innerWidth < 1024) {
+                     setIsOpen(false) 
                   }
                 }}
                 className={cn(
-                  "flex items-center px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-300 group font-montserrat relative cursor-pointer overflow-hidden",
-                  // Hover Effects: Float up slightly and move right
-                  "hover:-translate-y-0.5 hover:translate-x-1 hover:shadow-lg",
+                  "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative",
                   isActive 
-                    ? "bg-gradient-to-r from-[#00954f] to-[#146939] text-white shadow-md shadow-[#00954f]/20" 
-                    : "text-gray-400 hover:bg-[#146939]/40 hover:text-white"
+                    ? "bg-[#146939] text-white shadow-md" 
+                    : "text-gray-300 hover:bg-[#146939]/50 hover:text-white"
                 )}
               >
-                {/* Active Indicator Line */}
-                {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white/30 rounded-r-full" />
-                )}
+                <Icon className={cn("h-5 w-5 shrink-0 transition-transform", !isOpen && "mx-auto")} />
+                
+                <span className={cn(
+                  "font-montserrat font-medium whitespace-nowrap transition-all duration-300",
+                  isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 absolute left-14 hidden lg:block pointer-events-none"
+                )}>
+                  {link.label}
+                </span>
 
-                <item.icon className={cn(
-                    "mr-3 h-5 w-5 transition-transform duration-300 group-hover:scale-110", 
-                    isActive ? "text-white" : "text-gray-500 group-hover:text-[#00954f]"
-                )} />
-                <span className="relative z-10">{item.label}</span>
+                {/* Tooltip for Mini Sidebar (Desktop only) */}
+                {!isOpen && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap hidden lg:block">
+                    {link.label}
+                  </div>
+                )}
               </Link>
             )
           })}
         </nav>
 
-        {/* --- Footer / Sign Out --- */}
-        <div className="p-4 border-t border-[#146939]/50 bg-[#146939]/10">
-          <SignOutButton />
-          <p className="text-[10px] text-white text-center mt-3 font-roboto opacity-60">
-              © 2025 CSci 153 Project - Jonhei Akiu Lacre
-          </p>
+        {/* Footer / Sign Out */}
+        <div className="p-4 border-t border-[#146939]/30">
+           <SignOutButton className={cn(
+               "text-gray-300 hover:bg-[#146939]/50 hover:text-white justify-start w-full",
+               !isOpen && "justify-center px-0"
+           )}>
+               {!isOpen ? <LogOutIconOnly /> : null}
+           </SignOutButton>
         </div>
       </aside>
     </>
   )
+}
+
+// Icon wrapper for mini-state sign out
+function LogOutIconOnly() {
+    return (
+        <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="20" height="20" 
+            viewBox="0 0 24 24" fill="none" 
+            stroke="currentColor" strokeWidth="2" 
+            strokeLinecap="round" strokeLinejoin="round"
+        >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" x2="9" y1="12" y2="12" />
+        </svg>
+    )
 }
