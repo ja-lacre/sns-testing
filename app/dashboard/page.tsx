@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const [
     { count: studentsCount },
     { count: classesCount },
-    { count: pendingResultsCount }, // Results that are pending
+    { count: sentExamsCount }, // Results that are pending
     { count: examsCount },
     { data: recentExams }
   ] = await Promise.all([
@@ -22,12 +22,12 @@ export default async function DashboardPage() {
     supabase.from('classes').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     
     // Counting results where status is pending (needs grading)
-    supabase.from('results').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('exams').select('*', { count: 'exact', head: true }).eq('release_status', 'released'),
     
     supabase.from('exams').select('*', { count: 'exact', head: true }),
     
     // Fetch 4 most recent exams
-    supabase.from('exams').select('*').order('date', { ascending: false }).limit(4)
+    supabase.from('exams').select('*').order('date', { ascending: false }).limit(2)
   ])
 
   return (
@@ -51,7 +51,7 @@ export default async function DashboardPage() {
       <StatsOverview 
         totalStudents={studentsCount || 0}
         activeClasses={classesCount || 0}
-        pendingResults={pendingResultsCount || 0}
+        sentExams={sentExamsCount || 0}
         examsManaged={examsCount || 0}
       />
 
