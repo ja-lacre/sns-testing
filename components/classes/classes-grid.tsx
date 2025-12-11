@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react"
-import { BookOpen, Users, ArrowRight, MoreVertical, Calendar, Trash2, Edit, UserPlus, Archive } from "lucide-react"
+import { BookOpen, Users, ArrowRight, MoreVertical, Edit, UserPlus, Archive } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -73,14 +73,11 @@ export function ClassesGrid({ classes }: ClassesGridProps) {
             </CardHeader>
 
             <CardContent className="py-4">
-              <div className="flex items-center justify-between text-sm text-gray-500 font-roboto">
-                <div className="flex items-center gap-2">
+              {/* Removed Fall 2024, kept Student Count */}
+              <div className="flex items-center text-sm text-gray-500 font-roboto">
+                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full">
                   <Users className="h-4 w-4 text-[#00954f]" />
                   <span>{cls.student_count || 0} Students</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span>Fall 2024</span>
                 </div>
               </div>
             </CardContent>
@@ -114,7 +111,6 @@ export function ClassesGrid({ classes }: ClassesGridProps) {
         </button>
       </div>
 
-      {/* Render the Create Modal */}
       <CreateClassDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
     </>
   )
