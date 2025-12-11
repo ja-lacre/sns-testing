@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { LayoutDashboard, Users, GraduationCap, FileSpreadsheet, LogOut, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { createClient } from "@/utils/supabase/client" // Import Supabase client
+import { createClient } from "@/utils/supabase/client"
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -19,7 +19,6 @@ export function Sidebar() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Handler for signing out
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) {
@@ -31,45 +30,72 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full md:translate-x-0 bg-[#17321A] text-white transition-transform duration-300 flex flex-col">
-      <div className="p-6 border-b border-[#146939] flex flex-col items-center">
-        <h1 className="font-trajan text-2xl font-bold tracking-[0.2em] text-white">SNS</h1>
-        <p className="text-[10px] text-[#00954f] font-montserrat uppercase tracking-[0.2em] font-semibold mt-1">
-          Teacher Portal
-        </p>
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full md:translate-x-0 bg-gradient-to-b from-[#146939] to-[#17321A] text-white transition-all duration-300 flex flex-col shadow-2xl border-r border-[#146939]">
+      
+      {/* --- Header Section --- */}
+      <div className="p-8 border-b border-[#146939]/50 flex flex-col items-center justify-center relative overflow-hidden group">
+        {/* Decorative background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-[#00954f] rounded-full opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-700"></div>
+        
+        <div className="relative z-10 flex flex-col items-center gap-3">
+            <div className="p-3 bg-[#146939]/30 rounded-2xl border border-[#146939] shadow-inner group-hover:scale-105 transition-transform duration-300">
+                <LayoutDashboard className="h-8 w-8 text-[#00954f]" />
+            </div>
+            <div className="text-center">
+                <h1 className="font-trajan text-3xl font-bold tracking-[0.15em] text-white leading-tight">
+                    SNS
+                </h1>
+                <p className="text-[10px] text-[#00954f] font-montserrat uppercase tracking-[0.25em] font-bold mt-1">
+                    Teacher Portal
+                </p>
+            </div>
+        </div>
       </div>
 
-      <nav className="flex-1 py-6 px-3 space-y-1">
+      {/* --- Navigation --- */}
+      <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
               key={item.href}
               href={item.href}
-              // Added 'cursor-pointer' here
               className={cn(
-                "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 group font-montserrat cursor-pointer",
+                "flex items-center px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-300 group font-montserrat relative cursor-pointer overflow-hidden",
+                // Hover Effects: Float up slightly and move right
+                "hover:-translate-y-0.5 hover:translate-x-1 hover:shadow-lg",
                 isActive 
-                  ? "bg-[#00954f] text-white shadow-md" 
-                  : "text-gray-300 hover:bg-[#146939] hover:text-white"
+                  ? "bg-gradient-to-r from-[#00954f] to-[#146939] text-white shadow-md shadow-[#00954f]/20" 
+                  : "text-gray-400 hover:bg-[#146939]/40 hover:text-white"
               )}
             >
-              <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-white" : "text-gray-400 group-hover:text-white")} />
-              {item.label}
+              {/* Active Indicator Line */}
+              {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white/30 rounded-r-full" />
+              )}
+
+              <item.icon className={cn(
+                  "mr-3 h-5 w-5 transition-transform duration-300 group-hover:scale-110", 
+                  isActive ? "text-white" : "text-gray-500 group-hover:text-[#00954f]"
+              )} />
+              <span className="relative z-10">{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#146939]">
+      {/* --- Footer / Sign Out --- */}
+      <div className="p-4 border-t border-[#146939]/50 bg-[#146939]/10">
         <button 
           onClick={handleSignOut}
-          // Added 'cursor-pointer' here
-          className="flex w-full items-center px-4 py-3 text-sm font-medium text-red-300 hover:bg-red-900/30 hover:text-red-200 rounded-lg transition-colors font-montserrat cursor-pointer"
+          className="flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-red-300 hover:text-red-200 hover:bg-red-500/10 rounded-xl transition-all duration-300 group font-montserrat cursor-pointer hover:shadow-inner"
         >
-          <LogOut className="mr-3 h-5 w-5" />
-          Sign Out
+          <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          <span>Sign Out</span>
         </button>
+        <p className="text-[10px] text-white text-center mt-3 font-roboto opacity-60">
+            © CSci 153 - 2025 - Jonhei Akiu Lacre
+        </p>
       </div>
     </aside>
   )
