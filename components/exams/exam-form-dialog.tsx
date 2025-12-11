@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { X, Loader2, Save, FileText, Calendar, Clock } from "lucide-react"
+import { X, Loader2, Save, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { FormSelect, FormDatePicker } from "@/components/ui/form-components" // Import new components
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -20,7 +21,7 @@ interface ExamItem {
   name: string
   class_code: string
   date: string
-  status: string
+  // status removed
 }
 
 interface ExamFormDialogProps {
@@ -28,9 +29,10 @@ interface ExamFormDialogProps {
   onOpenChange: (open: boolean) => void
   availableClasses: ClassItem[]
   examToEdit?: ExamItem | null
+  defaultClassCode?: string // Added to support pre-filling from Class Details page
 }
 
-export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdit }: ExamFormDialogProps) {
+export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdit, defaultClassCode }: ExamFormDialogProps) {
   const [loading, setLoading] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
@@ -43,9 +45,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
     if (open) {
       setIsMounted(true)
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsVisible(true)
-        })
+        requestAnimationFrame(() => setIsVisible(true))
       })
     } else {
       setIsVisible(false)
@@ -62,13 +62,11 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
     const name = formData.get("name") as string
     const classCode = formData.get("classCode") as string
     const date = formData.get("date") as string
-    const status = formData.get("status") as string
 
     const examData = {
       name,
       class_code: classCode,
       date,
-      status
     }
 
     let error
@@ -98,6 +96,12 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
 
   if (!isMounted) return null
 
+  // Prepare options for the select component
+  const classOptions = availableClasses.map(cls => ({
+    label: `${cls.name} (${cls.code})`,
+    value: cls.code
+  }))
+
   return (
     <div className={cn(
         "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
@@ -118,7 +122,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
               {isEditing ? "Edit Exam" : "Create New Exam"}
             </h2>
             <p className="text-sm text-gray-500 font-roboto mt-1">
-              {isEditing ? "Update exam details below." : "Schedule a new assessment for your class."}
+              {isEditing ? "Update exam details below." : "Schedule a new assessment."}
             </p>
           </div>
           <button 
@@ -150,66 +154,28 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
 
             <div className="space-y-2">
               <Label htmlFor="classCode" className="text-[#17321A] font-bold font-roboto text-sm">Assign to Class</Label>
-              <div className="relative">
-                <select 
-                  id="classCode" 
-                  name="classCode" 
-                  defaultValue={examToEdit?.class_code || ""}
-                  required
-                  className="w-full pl-3 pr-10 py-2 text-sm border border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 appearance-none cursor-pointer text-gray-700 outline-none font-roboto"
-                >
-                  <option value="" disabled>Select a class</option>
-                  {availableClasses.map((cls) => (
-                    <option key={cls.id} value={cls.code}>
-                      {cls.name} ({cls.code})
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
-                </div>
-              </div>
+              <FormSelect 
+                id="classCode"
+                name="classCode"
+                defaultValue={examToEdit?.class_code || defaultClassCode || ""}
+                required
+                options={classOptions}
+                placeholder="Select a class"
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-[#17321A] font-bold font-roboto text-sm">Date</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                  <Input 
-                    id="date" 
-                    name="date" 
-                    type="date"
-                    defaultValue={examToEdit?.date}
-                    required 
-                    className="pl-9 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 w-full font-roboto accent-[#146939]"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="status" className="text-[#17321A] font-bold font-roboto text-sm">Status</Label>
-                <div className="relative">
-                  <select 
-                    id="status" 
-                    name="status" 
-                    defaultValue={examToEdit?.status || "Draft"}
-                    required
-                    className="w-full px-3 py-2 text-sm border border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 appearance-none cursor-pointer text-gray-700 outline-none font-roboto"
-                  >
-                    <option value="Draft">Draft</option>
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Published">Published</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="date" className="text-[#17321A] font-bold font-roboto text-sm">Date</Label>
+              <FormDatePicker 
+                id="date"
+                name="date"
+                defaultValue={examToEdit?.date}
+                required
+              />
             </div>
           </div>
 
-          <div className="pt-2 flex justify-end gap-3 border-t border-gray-50 mt-2">
+          <div className="pt-4 flex justify-end gap-3 border-t border-gray-50 mt-2">
             <Button 
               type="button" 
               variant="ghost" 
