@@ -27,7 +27,7 @@ interface Exam {
   date: string
   release_status: 'draft' | 'released'
   class_id?: string
-  total_score?: number // Added field
+  total_score?: number
 }
 
 interface InputScoresContentProps {
@@ -52,7 +52,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
   // Default to 100 if undefined
   const maxScore = exam.total_score || 100
 
-  // Sync local state with props
+  // Sync local state with props whenever 'students' list updates
   useEffect(() => {
     setScores(prevScores => {
       const newScores: Record<string, string> = {}
@@ -69,7 +69,6 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
 
   const handleScoreChange = (studentId: string, val: string) => {
     if (val === '' || /^\d+$/.test(val)) {
-        // Validation: Don't allow values higher than maxScore
         if (val !== '' && parseInt(val) > maxScore) return
         setScores(prev => ({ ...prev, [studentId]: val }))
     }
@@ -99,25 +98,32 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
 
   const handleRelease = async () => {
     const filledScores = Object.values(scores).filter(s => s !== '').length
-    if (!confirm(`Are you sure you want to release these results? \n\n${filledScores} students will receive their scores immediately.`)) return
+    if (!confirm(`Are you sure you want to release these results? \n\n${filledScores} students will receive their scores via email immediately.`)) return
 
     setReleasing(true)
+    
+    // 1. Save pending changes first
     await handleSave()
 
-    const { error } = await supabase
-      .from('exams')
-      .update({ release_status: 'released', auto_release: false })
-      .eq('id', exam.id)
+    try {
+      // 2. Call API to send emails
+      const response = await fetch('/api/release-results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examId: exam.id }),
+      })
 
-    if (error) {
-      console.error("Error releasing:", error)
-      addToast("Failed to release results.", "error")
-    } else {
-      addToast("Results released successfully.", "success")
+      if (!response.ok) throw new Error('Failed to send emails')
+
+      addToast("Results released and emails sent successfully!", "success")
       setIsReleased(true)
       router.refresh()
+    } catch (error) {
+      console.error("Error releasing:", error)
+      addToast("Failed to release results. Check console.", "error")
+    } finally {
+      setReleasing(false)
     }
-    setReleasing(false)
   }
 
   return (
@@ -178,7 +184,6 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
       <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
         <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider font-montserrat">
           <span>Student List ({students.length})</span>
-          {/* Dynamic Header */}
           <span className="pr-8">Score (0 - {maxScore})</span>
         </div>
         
@@ -209,7 +214,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
                     <Input 
                     type="number" 
                     min="0" 
-                    max={maxScore} // Dynamic Max
+                    max={maxScore}
                     disabled={isReleased}
                     placeholder="-"
                     value={scores[student.id] || ''}
