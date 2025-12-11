@@ -87,10 +87,14 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
         addToast("Failed to update student profile.", "error")
       } else {
         addToast("Student profile updated successfully.", "success")
+        onOpenChange(false)
+        router.refresh()
       }
+      setLoading(false)
 
     } else {
       // --- Create Logic ---
+      // 1. Create Student
       const { data: student, error: studentError } = await supabase
         .from('students')
         .insert({ 
@@ -104,22 +108,34 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
       if (studentError) {
         console.error("Error creating student:", studentError)
         addToast("Failed to add student.", "error")
-      } else {
-        if (selectedClasses.size > 0 && student) {
-          const enrollments = Array.from(selectedClasses).map(classId => ({
-            student_id: student.id,
-            class_id: classId
-          }))
-          await supabase.from('enrollments').insert(enrollments)
+        setLoading(false)
+        return
+      }
+
+      // 2. Handle Enrollments (If student created successfully)
+      if (selectedClasses.size > 0 && student) {
+        const enrollments = Array.from(selectedClasses).map(classId => ({
+          student_id: student.id,
+          class_id: classId
+        }))
+        
+        const { error: enrollError } = await supabase.from('enrollments').insert(enrollments)
+        
+        if (enrollError) {
+            console.error("Error enrolling student:", enrollError)
+            addToast("Student added, but enrollment failed.", "error")
+        } else {
+            addToast("New student added and enrolled successfully.", "success")
         }
+      } else {
         addToast("New student added successfully.", "success")
       }
-    }
 
-    setLoading(false)
-    onOpenChange(false)
-    setSelectedClasses(new Set())
-    router.refresh()
+      setLoading(false)
+      onOpenChange(false)
+      setSelectedClasses(new Set())
+      router.refresh()
+    }
   }
 
   if (!isMounted) return null
@@ -134,10 +150,8 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
       )}>
         
-        {/* Top Gradient Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
-        {/* Header */}
         <div className="px-6 pt-8 pb-2 flex justify-between items-start shrink-0">
           <div>
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
@@ -149,13 +163,12 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
           </div>
           <button 
             onClick={() => onOpenChange(false)} 
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer -mr-2 -mt-2"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={onSubmit} className="flex-1 overflow-hidden flex flex-col">
           <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
             

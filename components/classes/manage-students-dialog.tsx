@@ -23,6 +23,7 @@ interface ManageStudentsDialogProps {
   allStudents: Student[]
   title?: string
   actionLabel?: string
+  onDataChange?: () => void // New Prop
 }
 
 export function ManageStudentsDialog({ 
@@ -32,7 +33,8 @@ export function ManageStudentsDialog({
   className, 
   allStudents,
   title = "Manage Students",
-  actionLabel = "Enroll"
+  actionLabel = "Enroll",
+  onDataChange
 }: ManageStudentsDialogProps) {
   const [isMounted, setIsMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
@@ -75,30 +77,33 @@ export function ManageStudentsDialog({
     const isEnrolled = enrolledStudentIds.has(studentId)
 
     if (isEnrolled) {
-      // Unenroll
-      await supabase
+      const { error } = await supabase
         .from('enrollments')
         .delete()
         .match({ class_id: classId, student_id: studentId })
       
-      const newSet = new Set(enrolledStudentIds)
-      newSet.delete(studentId)
-      setEnrolledStudentIds(newSet)
-      addToast("Student removed from class.", "info")
+      if (!error) {
+        const newSet = new Set(enrolledStudentIds)
+        newSet.delete(studentId)
+        setEnrolledStudentIds(newSet)
+        addToast("Student removed from class.", "info")
+      }
     } else {
-      // Enroll
-      await supabase
+      const { error } = await supabase
         .from('enrollments')
         .insert({ class_id: classId, student_id: studentId })
       
-      const newSet = new Set(enrolledStudentIds)
-      newSet.add(studentId)
-      setEnrolledStudentIds(newSet)
-      addToast("Student enrolled successfully.", "success")
+      if (!error) {
+        const newSet = new Set(enrolledStudentIds)
+        newSet.add(studentId)
+        setEnrolledStudentIds(newSet)
+        addToast("Student enrolled successfully.", "success")
+      }
     }
     
     setProcessingId(null)
     router.refresh()
+    if (onDataChange) onDataChange() // Trigger parent update
   }
 
   const filteredStudents = allStudents.filter(s => 
@@ -110,14 +115,13 @@ export function ManageStudentsDialog({
 
   return (
     <div className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
+        "fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
           "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform h-[80vh] flex flex-col",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
       )}>
-        
         {/* Top Green Accent Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
@@ -133,7 +137,7 @@ export function ManageStudentsDialog({
           </div>
           <button 
             onClick={() => onOpenChange(false)} 
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer -mr-2 -mt-2"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>

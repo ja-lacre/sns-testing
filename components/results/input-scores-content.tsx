@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, Save, Send, UserPlus, Loader2, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -27,6 +27,7 @@ interface Exam {
   date: string
   release_status: 'draft' | 'released'
   class_id?: string
+  total_score?: number // Added field
 }
 
 interface InputScoresContentProps {
@@ -37,13 +38,7 @@ interface InputScoresContentProps {
 }
 
 export function InputScoresContent({ exam, students, allStudents, classId }: InputScoresContentProps) {
-  const [scores, setScores] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {}
-    students.forEach(s => {
-      initial[s.id] = s.score !== null && s.score !== undefined ? s.score.toString() : ''
-    })
-    return initial
-  })
+  const [scores, setScores] = useState<Record<string, string>>({})
   
   const [saving, setSaving] = useState(false)
   const [releasing, setReleasing] = useState(false)
@@ -54,9 +49,28 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
   const router = useRouter()
   const { addToast } = useToast()
 
+  // Default to 100 if undefined
+  const maxScore = exam.total_score || 100
+
+  // Sync local state with props
+  useEffect(() => {
+    setScores(prevScores => {
+      const newScores: Record<string, string> = {}
+      students.forEach(s => {
+        if (prevScores[s.id] !== undefined) {
+          newScores[s.id] = prevScores[s.id]
+        } else {
+          newScores[s.id] = s.score !== null && s.score !== undefined ? s.score.toString() : ''
+        }
+      })
+      return newScores
+    })
+  }, [students])
+
   const handleScoreChange = (studentId: string, val: string) => {
     if (val === '' || /^\d+$/.test(val)) {
-        if (val !== '' && parseInt(val) > 100) return
+        // Validation: Don't allow values higher than maxScore
+        if (val !== '' && parseInt(val) > maxScore) return
         setScores(prev => ({ ...prev, [studentId]: val }))
     }
   }
@@ -129,7 +143,6 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
           </div>
           
           <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-            {/* Add Student Button */}
             <Button 
                 variant="outline"
                 onClick={() => setIsManageOpen(true)}
@@ -138,7 +151,6 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
               <UserPlus className="mr-2 h-4 w-4" /> Add Students
             </Button>
 
-            {/* Save Button */}
             <Button 
                 onClick={handleSave} 
                 disabled={saving || isReleased} 
@@ -148,7 +160,6 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
               {saving ? 'Saving...' : 'Save Draft'}
             </Button>
 
-            {/* Release Button */}
             {!isReleased && (
                 <Button 
                     onClick={handleRelease} 
@@ -167,7 +178,8 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
       <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
         <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider font-montserrat">
           <span>Student List ({students.length})</span>
-          <span className="pr-8">Score (0-100)</span>
+          {/* Dynamic Header */}
+          <span className="pr-8">Score (0 - {maxScore})</span>
         </div>
         
         <div className="divide-y divide-gray-50 max-h-[60vh] overflow-y-auto custom-scrollbar">
@@ -197,7 +209,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
                     <Input 
                     type="number" 
                     min="0" 
-                    max="100"
+                    max={maxScore} // Dynamic Max
                     disabled={isReleased}
                     placeholder="-"
                     value={scores[student.id] || ''}
@@ -222,6 +234,7 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
         allStudents={allStudents}
         title="Add Students"
         actionLabel="Add"
+        onDataChange={() => router.refresh()}
       />
     </div>
   )

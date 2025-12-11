@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { X, Loader2, Save, FileText } from "lucide-react"
+import { X, Loader2, Save, FileText, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,6 +22,7 @@ interface ExamItem {
   name: string
   class_code: string
   date: string
+  total_score?: number // Added field
 }
 
 interface ExamFormDialogProps {
@@ -61,6 +62,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
     const name = formData.get("name") as string
     const classCode = formData.get("classCode") as string
     const date = formData.get("date") as string
+    const totalScore = parseInt(formData.get("totalScore") as string) || 100 // Get total score
 
     // Find the Class ID based on the selected code
     const selectedClass = availableClasses.find(c => c.code === classCode)
@@ -70,6 +72,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
       class_code: classCode, 
       class_id: selectedClass?.id, 
       date,
+      total_score: totalScore // Save total score
     }
 
     let error
@@ -163,14 +166,33 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date" className="text-[#17321A] font-bold font-roboto text-sm">Date</Label>
-              <FormDatePicker 
-                id="date"
-                name="date"
-                defaultValue={examToEdit?.date}
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date" className="text-[#17321A] font-bold font-roboto text-sm">Date</Label>
+                <FormDatePicker 
+                  id="date"
+                  name="date"
+                  defaultValue={examToEdit?.date}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="totalScore" className="text-[#17321A] font-bold font-roboto text-sm">Total Score</Label>
+                <div className="relative">
+                  <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="totalScore" 
+                    name="totalScore" 
+                    type="number"
+                    min="1"
+                    defaultValue={examToEdit?.total_score || 100}
+                    placeholder="100" 
+                    required 
+                    className="pl-9 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 font-roboto"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
