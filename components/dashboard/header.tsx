@@ -1,24 +1,82 @@
-import { Bell, Search, UserCircle } from "lucide-react"
+'use client'
 
-export function Header() {
+import { useEffect, useState } from "react"
+import { UserCircle, Menu, LogOut } from "lucide-react"
+import { createClient } from "@/utils/supabase/client"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+
+interface HeaderProps {
+  onToggle: () => void
+  isSidebarOpen: boolean
+}
+
+export function Header({ onToggle, isSidebarOpen }: HeaderProps) {
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const supabase = createClient()
+  const router = useRouter()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserEmail(user.email ?? null)
+      }
+    }
+    getUser()
+  }, [supabase])
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) console.error('Error signing out:', error)
+    router.push("/login")
+    router.refresh()
+  }
+
   return (
-    <header className="bg-white border-b border-gray-200 h-16 px-8 flex items-center justify-between shadow-sm sticky top-0 z-30">
-      <div className="flex items-center text-gray-400">
-        <Search className="w-5 h-5" />
-        <span className="ml-3 text-sm font-roboto">Search students or exams...</span>
+    <header className="bg-white border-b border-gray-200 h-16 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
+      
+      <div className="flex items-center gap-3">
+        {/* Unified Hamburger Menu for Mobile & Desktop */}
+        <button 
+          onClick={onToggle}
+          className={cn(
+            "p-2 -ml-2 rounded-md transition-all duration-200",
+            "text-gray-600 hover:text-[#146939] hover:bg-[#e6f4ea] active:bg-[#d1e7dd]",
+            // Optional: Highlight if sidebar is open
+            isSidebarOpen && "bg-[#e6f4ea] text-[#146939]"
+          )}
+          aria-label="Toggle Sidebar"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <button className="relative p-2 text-gray-400 hover:text-[#146939] transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
-        <div className="flex items-center gap-3 pl-4 border-l border-gray-100">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-[#17321A] font-montserrat">Prof. Smith</p>
-            <p className="text-xs text-gray-500 font-roboto">Science Dept.</p>
+      {/* Right Side: User Info & Sign Out */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:pl-4 sm:border-l sm:border-gray-100">
+          
+          <div className="text-right flex flex-col items-end">
+            <p className="text-[10px] sm:text-sm font-semibold text-[#17321A] font-montserrat leading-tight">
+              Logged in as:
+            </p>
+            <p className="text-[10px] sm:text-xs text-gray-500 font-roboto truncate max-w-[120px] sm:max-w-[200px]">
+              {userEmail || 'Loading...'}
+            </p>
           </div>
-          <UserCircle className="w-9 h-9 text-[#00954f]" />
+          
+          <UserCircle className="w-8 h-8 sm:w-9 sm:h-9 text-[#00954f]" />
+
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleSignOut}
+            className="flex text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors h-8 w-8 sm:h-9 sm:w-9"
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+          </Button>
         </div>
       </div>
     </header>
