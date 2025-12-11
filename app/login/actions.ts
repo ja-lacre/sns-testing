@@ -7,17 +7,22 @@ import { createClient } from '@/utils/supabase/server'
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  }
+  // 1. Get data from form
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  // 2. Sign in with Supabase
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
   if (error) {
+    // Return error to be displayed in the UI
     return { error: error.message }
   }
 
+  // 3. Revalidate and Redirect to Dashboard
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect('/dashboard')
 }
