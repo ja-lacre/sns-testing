@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { AlertTriangle, RefreshCcw, Archive, X, Loader2 } from "lucide-react"
+import { RefreshCcw, Archive, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -12,7 +12,7 @@ interface ConfirmActionDialogProps {
   description: string
   actionLabel: string
   onConfirm: () => Promise<void>
-  variant?: 'danger' | 'default' // 'danger' for Archive, 'default' for Restore
+  variant?: 'danger' | 'default'
 }
 
 export function ConfirmActionDialog({ 
@@ -28,7 +28,6 @@ export function ConfirmActionDialog({
   const [isMounted, setIsMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
 
-  // Handle Entry/Exit Animations
   useEffect(() => {
     if (open) {
       setIsMounted(true)
@@ -62,12 +61,17 @@ export function ConfirmActionDialog({
     >
       <div 
         className={cn(
-          "bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform",
+          "bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
         )}
       >
-        {/* Top Accent Line (Green) */}
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
+        {/* Top Accent Line - Dynamic Color */}
+        <div className={cn(
+          "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r",
+          variant === 'danger' 
+            ? "from-amber-600 to-amber-500" 
+            : "from-[#146939] to-[#00954f]"
+        )}></div>
 
         {/* Close Button */}
         <button 
@@ -94,7 +98,7 @@ export function ConfirmActionDialog({
             <Button 
               variant="ghost" 
               onClick={() => onOpenChange(false)}
-              className="flex-1 text-gray-500 hover:text-[#17321A] hover:bg-gray-100 font-montserrat h-10"
+              className="flex-1 text-gray-500 hover:text-[#17321A] hover:bg-gray-100 font-montserrat h-10 rounded-xl cursor-pointer"
             >
               Cancel
             </Button>
@@ -102,7 +106,7 @@ export function ConfirmActionDialog({
               onClick={handleConfirm}
               disabled={loading}
               className={cn(
-                "flex-1 text-white font-montserrat h-10 shadow-md hover:shadow-lg transition-all",
+                "flex-1 text-white font-montserrat h-10 shadow-md hover:shadow-lg transition-all rounded-xl cursor-pointer",
                 variant === 'danger' 
                   ? "bg-amber-600 hover:bg-amber-700" 
                   : "bg-[#146939] hover:bg-[#00954f]"

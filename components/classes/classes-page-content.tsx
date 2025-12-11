@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Link from "next/link"
 import { ClassFormDialog } from "./class-form-dialog"
 import { ManageStudentsDialog } from "./manage-students-dialog"
+import { ConfirmActionDialog } from "./confirm-action-dialog" // Import the new dialog
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -36,28 +37,38 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
   const [editingClass, setEditingClass] = useState<ClassItem | null>(null)
   const [managingClass, setManagingClass] = useState<ClassItem | null>(null)
   
-  // New State: View Filter
+  // Confirmation Dialog State
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<{ id: string, type: 'archive' | 'restore' } | null>(null)
+
   const [view, setView] = useState<'active' | 'archived'>('active')
   
   const supabase = createClient()
   const router = useRouter()
 
-  // Filter classes based on the current view
   const displayedClasses = classes.filter(cls => cls.status === view)
 
-  const toggleStatus = async (classId: string, newStatus: 'active' | 'archived') => {
-    const action = newStatus === 'archived' ? 'archive' : 'restore'
-    if (confirm(`Are you sure you want to ${action} this class?`)) {
-      const { error } = await supabase
-        .from('classes')
-        .update({ status: newStatus })
-        .eq('id', classId)
-      
-      if (!error) {
-        router.refresh()
-      } else {
-        console.error(`Error ${action}ing class:`, error)
-      }
+  // Trigger the custom dialog instead of window.confirm
+  const initiateToggleStatus = (classId: string, type: 'archive' | 'restore') => {
+    setConfirmAction({ id: classId, type })
+    setConfirmOpen(true)
+  }
+
+  // The actual action executed by the dialog
+  const executeToggleStatus = async () => {
+    if (!confirmAction) return
+
+    const newStatus = confirmAction.type === 'archive' ? 'archived' : 'active'
+    
+    const { error } = await supabase
+      .from('classes')
+      .update({ status: newStatus })
+      .eq('id', confirmAction.id)
+    
+    if (!error) {
+      router.refresh()
+    } else {
+      console.error(`Error ${confirmAction.type}ing class:`, error)
     }
   }
 
@@ -84,12 +95,12 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         </Button>
       </div>
 
-      {/* --- View Toggles (Active / Archived) --- */}
+      {/* --- View Toggles --- */}
       <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-fit">
         <button
           onClick={() => setView('active')}
           className={cn(
-            "px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 font-montserrat",
+            "px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 font-montserrat cursor-pointer",
             view === 'active' 
               ? "bg-white text-[#146939] shadow-sm" 
               : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
@@ -100,7 +111,7 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         <button
           onClick={() => setView('archived')}
           className={cn(
-            "px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 font-montserrat",
+            "px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 font-montserrat cursor-pointer",
             view === 'archived' 
               ? "bg-white text-[#146939] shadow-sm" 
               : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
@@ -122,14 +133,12 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
               key={cls.id} 
               className={cn(
                 "group relative border shadow-sm hover:shadow-xl transition-all duration-300 ease-out bg-white overflow-hidden hover:-translate-y-2 flex flex-col justify-between",
-                view === 'archived' ? "border-gray-200 opacity-90" : "border-gray-100"
+                // Reduced opacity slightly for archived items to distinguish them visually, but kept green bar
+                view === 'archived' ? "border-gray-200 opacity-95 grayscale-[10%]" : "border-gray-100"
               )}
             >
-              {/* Top Line: Green for Active, Gray for Archived */}
-              <div className={cn(
-                "absolute top-0 left-0 w-full h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-                view === 'active' ? "bg-gradient-to-r from-[#146939] to-[#00954f]" : "bg-gray-400"
-              )}></div>
+              {/* Top Line: ALWAYS Green Gradient now */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div className="space-y-1">
@@ -148,7 +157,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
                   </div>
                 </div>
                 
-                {/* Kebab Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#17321A] hover:bg-[#e6f4ea] transition-colors cursor-pointer">
@@ -173,14 +181,14 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
                     
                     {view === 'active' ? (
                       <DropdownMenuItem 
-                        onClick={() => toggleStatus(cls.id, 'archived')}
+                        onClick={() => initiateToggleStatus(cls.id, 'archive')}
                         className="cursor-pointer text-amber-600 focus:bg-amber-50 focus:text-amber-700 font-roboto"
                       >
                         <Archive className="mr-2 h-4 w-4" /> Archive
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem 
-                        onClick={() => toggleStatus(cls.id, 'active')}
+                        onClick={() => initiateToggleStatus(cls.id, 'restore')}
                         className="cursor-pointer text-[#146939] focus:bg-[#e6f4ea] font-roboto"
                       >
                         <RefreshCcw className="mr-2 h-4 w-4" /> Restore
@@ -215,7 +223,7 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
           ))
         )}
         
-        {/* Create Card (Only show in Active View) */}
+        {/* Create Card (Active View Only) */}
         {view === 'active' && (
           <button 
             onClick={() => setIsCreateOpen(true)}
@@ -232,7 +240,8 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         )}
       </div>
 
-      {/* Dialogs */}
+      {/* --- Dialogs --- */}
+      
       <ClassFormDialog 
         open={isCreateOpen} 
         onOpenChange={setIsCreateOpen} 
@@ -253,6 +262,19 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
             allStudents={allStudents}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmAction?.type === 'archive' ? "Archive Class" : "Restore Class"}
+        description={confirmAction?.type === 'archive' 
+            ? "Are you sure you want to archive this class? It will be moved to the Archived tab and hidden from your main dashboard." 
+            : "Are you sure you want to restore this class? It will be moved back to your Active Classes list."}
+        actionLabel={confirmAction?.type === 'archive' ? "Archive" : "Restore"}
+        onConfirm={executeToggleStatus}
+        variant={confirmAction?.type === 'archive' ? 'danger' : 'default'}
+      />
       
     </div>
   )
