@@ -1,17 +1,20 @@
 'use client'
 
-import { useActionState } from 'react' // or 'react-dom' if using older Next.js 14
+import { useActionState } from 'react'
 import { login } from './actions'
 
-// Simple Spinner Component for loading state
-function Spinner() {
-  return (
-    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-  )
-}
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Loader2, GraduationCap, LogIn } from "lucide-react"
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(async (_prev: any, formData: FormData) => {
@@ -19,88 +22,107 @@ export default function LoginPage() {
   }, null)
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="w-full max-w-sm space-y-8">
+    // CHANGE 1: Darker background (Slate-100) provides better contrast for the white card
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4 py-12 sm:px-6 lg:px-8">
+      
+      {/* CHANGE 2: Added 'border-gray-200' for definition and a specific 'shadow-xl' */}
+      <Card className="w-full max-w-[340px] sm:max-w-md bg-white border border-gray-200 shadow-xl relative overflow-hidden">
         
-        {/* Header Section */}
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-emerald-600">
+        {/* Optional: A very subtle top accent line to tie in the green theme */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-[#146939]"></div>
+
+        <CardHeader className="space-y-2 text-center pb-6 sm:pb-8 border-b border-gray-100 pt-8">
+          
+          <div className="flex justify-center mb-2">
+            <div className="p-3 sm:p-4 rounded-full bg-[#00954f]/10 mb-2">
+              <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-[#00954f]" />
+            </div>
+          </div>
+
+          <CardTitle className="text-4xl sm:text-5xl font-bold tracking-tight text-[#17321A] font-trajan">
             SNS
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your account
-          </p>
-        </div>
+          </CardTitle>
+          
+          <CardDescription className="text-base sm:text-lg font-semibold text-[#146939] font-montserrat">
+             Exam Result Notification System
+          </CardDescription>
+           <CardDescription className="text-xs sm:text-sm text-gray-500 font-roboto">
+            Please sign in to continue
+          </CardDescription>
+        </CardHeader>
 
-        {/* Card */}
-        <div className="bg-white py-8 px-10 shadow-xl rounded-2xl border border-gray-100">
-          <form action={formAction} className="space-y-6">
+        <CardContent className="pt-6 sm:pt-8">
+          <form action={formAction} className="space-y-4 sm:space-y-5">
             
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-[#17321A] font-bold font-roboto text-sm sm:text-base">
                 Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none block w-full px-3 py-2.5 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 sm:text-sm"
-                  placeholder="you@example.com"
-                />
-              </div>
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="student@example.com"
+                required
+                // Added a slight background to inputs to differentiate them from the card white
+                className="h-12 bg-gray-50 border-gray-200 focus-visible:bg-white focus-visible:ring-[#00954f] focus-visible:border-[#00954f] font-roboto text-base transition-colors" 
+              />
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="appearance-none block w-full px-3 py-2.5 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 sm:text-sm"
-                  placeholder="••••••••"
-                />
+            <div className="space-y-2">
+               <div className="flex items-center justify-between">
+                <Label htmlFor="password"className="text-[#17321A] font-bold font-roboto text-sm sm:text-base">
+                  Password
+                </Label>
+                <a href="#" className="text-xs sm:text-sm font-medium text-[#00954f] hover:underline font-roboto">
+                  Forgot password?
+                </a>
               </div>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                placeholder="••••••••"
+                className="h-12 bg-gray-50 border-gray-200 focus-visible:bg-white focus-visible:ring-[#00954f] focus-visible:border-[#00954f] font-roboto text-base transition-colors"
+              />
             </div>
 
-            {/* Error Message Display */}
             {state?.error && (
-              <div className="rounded-md bg-red-50 p-3">
-                <div className="flex">
-                  <div className="text-sm text-red-700 font-medium">
-                    {state.error}
-                  </div>
-                </div>
+              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200 font-medium font-roboto">
+                {state.error}
               </div>
             )}
 
-            {/* Submit Button */}
-            <div>
-              <button
-                disabled={isPending}
-                type="submit"
-                className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-              >
-                {isPending ? <Spinner /> : 'Sign in'}
-              </button>
-            </div>
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-white text-base font-semibold shadow-lg transition-all duration-300 bg-[#146939] hover:bg-[#00954f] hover:shadow-xl font-montserrat mt-2"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-5 w-5" />
+                  Sign In
+                </>
+              )}
+            </Button>
+
           </form>
-        </div>
+        </CardContent>
         
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-500">
-          Protected by standard encryption.
-        </p>
-      </div>
+        <CardFooter className="justify-center pb-6 sm:pb-8 bg-gray-50/50 border-t pt-6 rounded-b-xl">
+          <p className="text-xs text-gray-500 text-center font-roboto px-4">
+            Secure Institutional Access. <br className="hidden sm:block"/>
+            Is data incorrect? <a href="#" className="text-[#00954f] hover:underline font-medium whitespace-nowrap">Contact Registry.</a>
+          </p>
+        </CardFooter>
+
+      </Card>
     </div>
   )
 }
