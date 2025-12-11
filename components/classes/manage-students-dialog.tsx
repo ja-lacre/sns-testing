@@ -33,7 +33,6 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
   const supabase = createClient()
   const router = useRouter()
 
-  // Handle Entry/Exit Animations
   useEffect(() => {
     if (open) {
       setIsMounted(true)
@@ -68,7 +67,6 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
     const isEnrolled = enrolledStudentIds.has(studentId)
 
     if (isEnrolled) {
-      // Unenroll
       await supabase
         .from('enrollments')
         .delete()
@@ -78,7 +76,6 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
       newSet.delete(studentId)
       setEnrolledStudentIds(newSet)
     } else {
-      // Enroll
       await supabase
         .from('enrollments')
         .insert({ class_id: classId, student_id: studentId })
@@ -105,7 +102,8 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
-          "bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform h-[80vh] flex flex-col",
+          // Updated rounded-xl to rounded-2xl
+          "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform h-[80vh] flex flex-col",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
       )}>
         
@@ -138,7 +136,7 @@ export function ManageStudentsDialog({ open, onOpenChange, classId, className, a
               placeholder="Search by name or email..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 h-11"
+              className="pl-10 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 h-11 rounded-xl"
             />
           </div>
         </div>
