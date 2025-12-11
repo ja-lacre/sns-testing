@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { ClassFormDialog } from "./class-form-dialog"
 import { ManageStudentsDialog } from "./manage-students-dialog"
 import { ConfirmActionDialog } from "./confirm-action-dialog"
+import { ExamFormDialog } from "@/components/exams/exam-form-dialog" // Import Exam Dialog
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 
@@ -37,6 +38,7 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
   const [search, setSearch] = useState("")
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isManageOpen, setIsManageOpen] = useState(false)
+  const [isExamOpen, setIsExamOpen] = useState(false) // New state for Exam Dialog
   
   const [studentToRemove, setStudentToRemove] = useState<Student | null>(null)
 
@@ -69,7 +71,7 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10 max-w-5xl mx-auto">
       
-      {/* --- Breadcrumb & Header --- */}
+      {/* Header */}
       <div>
         <Link href="/dashboard/classes" className="inline-flex items-center text-sm text-gray-500 hover:text-[#146939] transition-colors mb-6 group">
           <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> 
@@ -100,25 +102,26 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
              <Button 
                 variant="outline" 
                 onClick={() => setIsEditOpen(true)}
-                // Added floating hover effect
                 className="border-gray-200 text-gray-700 hover:bg-gray-50 font-montserrat rounded-xl h-11 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
              >
                 <Settings className="mr-2 h-4 w-4" /> Class Settings
              </Button>
-             <Button className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat rounded-xl h-11 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer">
+             
+             {/* Wired Up Create Exam Button */}
+             <Button 
+                onClick={() => setIsExamOpen(true)}
+                className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat rounded-xl h-11 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer"
+             >
                 <FileText className="mr-2 h-4 w-4" /> Create Exam
              </Button>
           </div>
         </div>
-        
-        {/* Divider */}
         <div className="h-px w-full bg-gray-200 mt-6"></div>
       </div>
 
-      {/* --- Main Content: Student List --- */}
+      {/* Student List */}
       <div className="space-y-6">
         <Card className="border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
-          
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-50 pt-6 px-6">
              <div className="flex items-center gap-4">
                 <div className="p-2 bg-[#e6f4ea] rounded-full text-[#146939]">
@@ -144,10 +147,8 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
                    className="pl-9 h-10 bg-gray-50 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] rounded-xl" 
                  />
                </div>
-               
                <Button 
                  onClick={() => setIsManageOpen(true)}
-                 // Changed color scheme to match Create Exam (Green)
                  className="bg-[#146939] hover:bg-[#00954f] text-white rounded-xl h-10 px-4 font-montserrat text-xs shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer whitespace-nowrap"
                >
                  <UserPlus className="h-4 w-4 sm:mr-2" /> 
@@ -165,11 +166,7 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
                     </div>
                     <p className="text-lg font-medium text-gray-600">No students found</p>
                     <p className="text-sm text-gray-400 mt-1">Try searching for a different name or add a new student.</p>
-                    <Button 
-                        variant="link" 
-                        onClick={() => setIsManageOpen(true)}
-                        className="text-[#146939] mt-2 font-montserrat"
-                    >
+                    <Button variant="link" onClick={() => setIsManageOpen(true)} className="text-[#146939] mt-2 font-montserrat">
                         Enroll students now
                     </Button>
                   </div>
@@ -186,7 +183,6 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
                              <p className="text-xs text-gray-500 font-roboto">{student.email || 'No email provided'}</p>
                           </div>
                         </div>
-                        
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-[#146939] hover:bg-[#e6f4ea] rounded-lg h-8 w-8 p-0 transition-all cursor-pointer">
@@ -215,8 +211,7 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
         </Card>
       </div>
 
-      {/* --- Dialogs --- */}
-      
+      {/* Dialogs */}
       <ClassFormDialog 
         open={isEditOpen} 
         onOpenChange={setIsEditOpen} 
@@ -231,6 +226,14 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
         allStudents={allStudents}
       />
 
+      {/* New Exam Dialog Configured for this Class */}
+      <ExamFormDialog
+        open={isExamOpen}
+        onOpenChange={setIsExamOpen}
+        availableClasses={[classData]} // Pass ONLY this class
+        defaultClassCode={classData.code} // Pre-select this class
+      />
+
       <ConfirmActionDialog 
         open={!!studentToRemove}
         onOpenChange={(open) => !open && setStudentToRemove(null)}
@@ -240,7 +243,6 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
         variant="danger"
         onConfirm={handleRemoveStudent}
       />
-
     </div>
   )
 }
