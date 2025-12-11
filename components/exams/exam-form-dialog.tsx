@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { X, Loader2, Save, FileText } from "lucide-react"
+import { X, Loader2, Save, FileText, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FormSelect, FormDatePicker } from "@/components/ui/form-components" // Import new components
+import { FormSelect, FormDatePicker } from "@/components/ui/form-components"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface ClassItem {
   id: string
@@ -21,7 +22,6 @@ interface ExamItem {
   name: string
   class_code: string
   date: string
-  // status removed
 }
 
 interface ExamFormDialogProps {
@@ -29,7 +29,7 @@ interface ExamFormDialogProps {
   onOpenChange: (open: boolean) => void
   availableClasses: ClassItem[]
   examToEdit?: ExamItem | null
-  defaultClassCode?: string // Added to support pre-filling from Class Details page
+  defaultClassCode?: string
 }
 
 export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdit, defaultClassCode }: ExamFormDialogProps) {
@@ -39,6 +39,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
   
   const router = useRouter()
   const supabase = createClient()
+  const { addToast } = useToast()
   const isEditing = !!examToEdit
 
   useEffect(() => {
@@ -63,11 +64,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
     const classCode = formData.get("classCode") as string
     const date = formData.get("date") as string
 
-    const examData = {
-      name,
-      class_code: classCode,
-      date,
-    }
+    const examData = { name, class_code: classCode, date }
 
     let error
 
@@ -88,7 +85,9 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
 
     if (error) {
       console.error("Error saving exam:", error)
+      addToast("Failed to save exam details.", "error")
     } else {
+      addToast(isEditing ? "Exam updated successfully." : "Exam created successfully.", "success")
       onOpenChange(false)
       router.refresh()
     }
@@ -96,7 +95,6 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
 
   if (!isMounted) return null
 
-  // Prepare options for the select component
   const classOptions = availableClasses.map(cls => ({
     label: `${cls.name} (${cls.code})`,
     value: cls.code
@@ -111,11 +109,8 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
           "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
       )}>
-        
-        {/* Top Gradient Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
-        {/* Header */}
         <div className="px-6 pt-8 pb-2 flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
@@ -133,9 +128,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={onSubmit} className="p-6 space-y-5">
-          
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-[#17321A] font-bold font-roboto text-sm">Exam Name</Label>
@@ -189,11 +182,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
               disabled={loading}
               className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat min-w-[140px] h-11 shadow-md hover:shadow-lg transition-all cursor-pointer rounded-xl"
             >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               {isEditing ? "Save Changes" : "Create Exam"}
             </Button>
           </div>

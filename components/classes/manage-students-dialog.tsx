@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface Student {
   id: string
@@ -20,7 +21,6 @@ interface ManageStudentsDialogProps {
   classId: string
   className: string
   allStudents: Student[]
-  // New optional props for customization
   title?: string
   actionLabel?: string
 }
@@ -31,8 +31,8 @@ export function ManageStudentsDialog({
   classId, 
   className, 
   allStudents,
-  title = "Manage Students", // Default value
-  actionLabel = "Enroll"     // Default value
+  title = "Manage Students",
+  actionLabel = "Enroll"
 }: ManageStudentsDialogProps) {
   const [isMounted, setIsMounted] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
@@ -43,6 +43,7 @@ export function ManageStudentsDialog({
   
   const supabase = createClient()
   const router = useRouter()
+  const { addToast } = useToast()
 
   useEffect(() => {
     if (open) {
@@ -87,6 +88,7 @@ export function ManageStudentsDialog({
       const newSet = new Set(enrolledStudentIds)
       newSet.delete(studentId)
       setEnrolledStudentIds(newSet)
+      addToast("Student removed from class.", "info")
     } else {
       // Enroll
       await supabase
@@ -96,6 +98,7 @@ export function ManageStudentsDialog({
       const newSet = new Set(enrolledStudentIds)
       newSet.add(studentId)
       setEnrolledStudentIds(newSet)
+      addToast("Student enrolled successfully.", "success")
     }
     
     setProcessingId(null)
@@ -118,14 +121,10 @@ export function ManageStudentsDialog({
           "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform h-[80vh] flex flex-col",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
       )}>
-        
-        {/* Top Green Accent Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
-        {/* Header */}
         <div className="px-6 pt-8 pb-4 flex justify-between items-start shrink-0">
           <div>
-            {/* Dynamic Title */}
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
               {title}
             </h2>
@@ -141,7 +140,6 @@ export function ManageStudentsDialog({
           </button>
         </div>
 
-        {/* Search Bar */}
         <div className="px-6 pb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -154,7 +152,6 @@ export function ManageStudentsDialog({
           </div>
         </div>
 
-        {/* Student List */}
         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
           {loading ? (
              <div className="flex flex-col justify-center items-center h-full text-gray-400 gap-2">

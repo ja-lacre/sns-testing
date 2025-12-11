@@ -9,7 +9,8 @@ interface Exam {
   class_code: string
   date: string
   release_status: 'draft' | 'released'
-  student_count: number
+  student_count: number // Graded count
+  total_students: number // Enrolled count
 }
 
 export function ResultsReleaseList({ exams }: { exams: Exam[] }) {

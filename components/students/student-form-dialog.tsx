@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface ClassItem {
   id: string
@@ -26,7 +27,7 @@ interface StudentFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   availableClasses: ClassItem[]
-  studentToEdit?: Student | null // Optional: if provided, we are in edit mode
+  studentToEdit?: Student | null
 }
 
 export function StudentFormDialog({ open, onOpenChange, availableClasses, studentToEdit }: StudentFormDialogProps) {
@@ -37,6 +38,7 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
   
   const router = useRouter()
   const supabase = createClient()
+  const { addToast } = useToast()
   const isEditing = !!studentToEdit
 
   useEffect(() => {
@@ -82,7 +84,12 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
         })
         .eq('id', studentToEdit.id)
 
-      if (error) console.error("Error updating student:", error)
+      if (error) {
+        console.error("Error updating student:", error)
+        addToast("Failed to update student profile.", "error")
+      } else {
+        addToast("Student profile updated successfully.", "success")
+      }
 
     } else {
       // --- Create Logic ---
@@ -98,13 +105,16 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
 
       if (studentError) {
         console.error("Error creating student:", studentError)
-      } else if (selectedClasses.size > 0 && student) {
-        // Only enroll during creation for simplicity
-        const enrollments = Array.from(selectedClasses).map(classId => ({
-          student_id: student.id,
-          class_id: classId
-        }))
-        await supabase.from('enrollments').insert(enrollments)
+        addToast("Failed to add student.", "error")
+      } else {
+        if (selectedClasses.size > 0 && student) {
+          const enrollments = Array.from(selectedClasses).map(classId => ({
+            student_id: student.id,
+            class_id: classId
+          }))
+          await supabase.from('enrollments').insert(enrollments)
+        }
+        addToast("New student added successfully.", "success")
       }
     }
 
@@ -190,7 +200,6 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
               </div>
             </div>
 
-            {/* Class Enrollment - Only Show in Add Mode to keep Edit simple */}
             {!isEditing && (
               <div className="space-y-3 pt-2">
                 <Label className="text-[#17321A] font-bold font-roboto text-sm">Enroll in Classes (Optional)</Label>
