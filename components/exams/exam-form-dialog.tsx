@@ -22,7 +22,7 @@ interface ExamItem {
   name: string
   class_code: string
   date: string
-  total_score?: number // Added field
+  total_score?: number
 }
 
 interface ExamFormDialogProps {
@@ -62,7 +62,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
     const name = formData.get("name") as string
     const classCode = formData.get("classCode") as string
     const date = formData.get("date") as string
-    const totalScore = parseInt(formData.get("totalScore") as string) || 100 // Get total score
+    const totalScore = parseInt(formData.get("totalScore") as string) || 100
 
     // Find the Class ID based on the selected code
     const selectedClass = availableClasses.find(c => c.code === classCode)
@@ -72,7 +72,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
       class_code: classCode, 
       class_id: selectedClass?.id, 
       date,
-      total_score: totalScore // Save total score
+      total_score: totalScore
     }
 
     let error
@@ -115,12 +115,12 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
-          "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform",
+          "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform max-h-[90vh] mx-4",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
       )}>
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
-        <div className="px-6 pt-8 pb-2 flex justify-between items-start">
+        <div className="px-6 pt-8 pb-2 flex justify-between items-start shrink-0">
           <div>
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
               {isEditing ? "Edit Exam" : "Create New Exam"}
@@ -137,7 +137,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="p-6 space-y-5">
+        <form onSubmit={onSubmit} className="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-[#17321A] font-bold font-roboto text-sm">Exam Name</Label>
@@ -166,7 +166,8 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Responsive Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date" className="text-[#17321A] font-bold font-roboto text-sm">Date</Label>
                 <FormDatePicker 
@@ -196,7 +197,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end gap-3 border-t border-gray-50 mt-2">
+          <div className="pt-4 flex justify-end gap-3 border-t border-gray-50 mt-2 shrink-0">
             <Button 
               type="button" 
               variant="ghost" 

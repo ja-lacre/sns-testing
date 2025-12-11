@@ -59,8 +59,13 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
 
   const handleRemoveStudent = async () => {
     if (!studentToDelete) return
+    
+    await supabase.from('enrollments').delete().eq('student_id', studentToDelete.id)
+    await supabase.from('results').delete().eq('student_id', studentToDelete.id)
     const { error } = await supabase.from('students').delete().eq('id', studentToDelete.id)
+
     if (error) {
+        console.error("Error removing student:", error)
         addToast("Failed to delete student.", "error")
     } else {
         addToast("Student removed successfully.", "success")
@@ -83,15 +88,17 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       
-      {/* Header Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
+      {/* --- Header Controls --- */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        
+        {/* Search Bar */}
+        <div className="relative w-full lg:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input 
             placeholder="Search by name, email, or ID..." 
-            className="pl-10 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 rounded-xl bg-white"
+            className="pl-10 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 rounded-xl bg-white w-full"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -100,28 +107,35 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
           />
         </div>
         
-        <div className="flex gap-3">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 w-full lg:w-auto">
           <Button 
             onClick={() => setIsImportOpen(true)}
             variant="outline"
-            className="border-[#146939] text-[#146939] hover:bg-[#e6f4ea] font-montserrat h-11 rounded-xl cursor-pointer px-4"
+            className="w-full sm:w-auto border-[#146939] text-[#146939] hover:bg-[#e6f4ea] font-montserrat h-11 rounded-xl cursor-pointer px-4 justify-center"
           >
-            <FileUp className="mr-2 h-5 w-5" /> Import CSV
+            <FileUp className="mr-2 h-5 w-5" /> Import
           </Button>
 
           <Button 
             onClick={handleAddClick}
-            className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat h-11 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all rounded-xl cursor-pointer px-6"
+            className="w-full sm:w-auto bg-[#146939] hover:bg-[#00954f] text-white font-montserrat h-11 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all rounded-xl cursor-pointer px-6 justify-center"
           >
             <UserPlus className="mr-2 h-5 w-5" /> Add Student
           </Button>
         </div>
       </div>
 
-      {/* Table Card */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+      {/* --- Table Container --- */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col w-full overflow-hidden">
+        
+        {/* CRITICAL FIX FOR MOBILE:
+            max-w-[calc(100vw-2.5rem)] ensures this div never exceeds the viewport width minus padding.
+            This forces the horizontal scrollbar to appear on the DIV, not the page.
+        */}
+        <div className="overflow-x-auto w-full max-w-[calc(100vw-2.5rem)] md:max-w-full">
+          <table className="w-full text-sm text-left whitespace-nowrap"> 
+            {/* whitespace-nowrap prevents text from breaking and forcing vertical height issues */}
             <thead className="bg-gray-50/50 text-gray-500 font-montserrat uppercase text-xs border-b border-gray-100">
               <tr>
                 <th className="px-6 py-4 font-bold text-[#17321A]">Student ID</th>
@@ -152,7 +166,7 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#146939] to-[#00954f] flex items-center justify-center text-white font-bold font-montserrat text-xs shadow-sm">
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#146939] to-[#00954f] flex items-center justify-center text-white font-bold font-montserrat text-xs shadow-sm shrink-0">
                            {student.full_name.charAt(0)}
                         </div>
                         <span className="font-semibold text-[#17321A] font-montserrat">{student.full_name}</span>
@@ -162,9 +176,9 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
                       {student.email || '—'}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                      <div className="flex flex-wrap gap-1 max-w-[200px] overflow-hidden text-ellipsis">
                         {student.enrolled_classes.length > 0 ? (
-                          student.enrolled_classes.slice(0, 3).map((code, i) => (
+                          student.enrolled_classes.slice(0, 2).map((code, i) => (
                             <span key={i} className="text-[10px] font-bold px-1.5 py-0.5 bg-[#e6f4ea] text-[#146939] rounded border border-[#146939]/10">
                               {code}
                             </span>
@@ -172,9 +186,9 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
                         ) : (
                           <span className="text-gray-400 text-xs italic">None</span>
                         )}
-                        {student.enrolled_classes.length > 3 && (
+                        {student.enrolled_classes.length > 2 && (
                           <span className="text-[10px] text-gray-500 pl-1">
-                            +{student.enrolled_classes.length - 3} more
+                            +{student.enrolled_classes.length - 2}
                           </span>
                         )}
                       </div>
@@ -213,12 +227,12 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
           </table>
         </div>
 
-        {/* Pagination Footer */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/30">
-            <p className="text-xs text-gray-500 font-roboto">
-              Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredStudents.length)} of {filteredStudents.length} students
-            </p>
+        {/* --- Pagination Footer --- */}
+        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/30 gap-4">
+          <p className="text-xs text-gray-500 font-roboto text-center sm:text-left">
+            Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredStudents.length)} of {filteredStudents.length} students
+          </p>
+          {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
@@ -242,8 +256,8 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <StudentFormDialog 

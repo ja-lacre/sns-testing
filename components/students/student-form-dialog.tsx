@@ -146,12 +146,14 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
-          "bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform flex flex-col max-h-[90vh]",
+          "bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform flex flex-col max-h-[90vh] mx-4",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
       )}>
         
+        {/* Top Gradient Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
+        {/* Header */}
         <div className="px-6 pt-8 pb-2 flex justify-between items-start shrink-0">
           <div>
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
@@ -169,11 +171,12 @@ export function StudentFormDialog({ open, onOpenChange, availableClasses, studen
           </button>
         </div>
 
+        {/* Form */}
         <form onSubmit={onSubmit} className="flex-1 overflow-hidden flex flex-col">
-          <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+          <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
                 <div className="space-y-2">
                   <Label htmlFor="studentId" className="text-[#17321A] font-bold font-roboto text-sm">Student ID</Label>
                   <Input 

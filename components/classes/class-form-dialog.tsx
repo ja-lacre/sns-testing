@@ -89,7 +89,7 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
     >
       <div 
         className={cn(
-          "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+          "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] max-h-[90vh] mx-4",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
         )}
       >
@@ -97,7 +97,7 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
         {/* Header */}
-        <div className="px-6 pt-8 pb-2 flex justify-between items-start">
+        <div className="px-6 pt-8 pb-2 flex justify-between items-start shrink-0">
           <div>
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
               {isEditing ? "Edit Class" : "Create New Class"}
@@ -115,34 +115,36 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
         </div>
 
         {/* Form */}
-        <form onSubmit={onSubmit} className="p-6 space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#17321A] font-bold font-roboto text-sm">Class Name</Label>
-              <Input 
-                id="name" 
-                name="name" 
-                defaultValue={classToEdit?.name}
-                placeholder="e.g. Advanced Chemistry" 
-                required 
-                className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 bg-gray-50/50 rounded-lg"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="code" className="text-[#17321A] font-bold font-roboto text-sm">Course Code</Label>
-              <Input 
-                id="code" 
-                name="code" 
-                defaultValue={classToEdit?.code}
-                placeholder="e.g. CHEM-301" 
-                required 
-                className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 bg-gray-50/50 rounded-lg"
-              />
+        <form onSubmit={onSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-[#17321A] font-bold font-roboto text-sm">Class Name</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  defaultValue={classToEdit?.name}
+                  placeholder="e.g. Advanced Chemistry" 
+                  required 
+                  className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 bg-gray-50/50 rounded-lg"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="code" className="text-[#17321A] font-bold font-roboto text-sm">Course Code</Label>
+                <Input 
+                  id="code" 
+                  name="code" 
+                  defaultValue={classToEdit?.code}
+                  placeholder="e.g. CHEM-301" 
+                  required 
+                  className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 bg-gray-50/50 rounded-lg"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="pt-2 flex justify-end gap-3">
+          <div className="p-6 pt-2 border-t border-gray-50 bg-gray-50/30 flex justify-end gap-3 shrink-0">
             <Button 
               type="button" 
               variant="ghost" 

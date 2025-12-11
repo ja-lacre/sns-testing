@@ -9,7 +9,7 @@ export default async function InputScoresPage({ params }: { params: Promise<{ id
   const supabase = await createClient()
 
   // 1. Fetch Exam
-  const { data: exam } = await supabase.from('exams').select('*').eq('id', id).single()
+  const { data: exam } = await supabase.from('exams').select('*, total_score').eq('id', id).single()
   if (!exam) return notFound()
 
   // 2. Fetch Class ID
@@ -44,11 +44,14 @@ export default async function InputScoresPage({ params }: { params: Promise<{ id
   }) || []
 
   return (
-    <InputScoresContent 
-        exam={exam} 
-        students={studentsWithScores} 
-        allStudents={allStudents || []}
-        classId={classData.id}
-    />
+    // FIX: Added w-full and overflow-x-hidden to the main container
+    <div className="w-full overflow-x-hidden">
+        <InputScoresContent 
+            exam={exam} 
+            students={studentsWithScores} 
+            allStudents={allStudents || []}
+            classId={classData.id}
+        />
+    </div>
   )
 }
