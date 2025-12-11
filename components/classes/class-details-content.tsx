@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react"
-import { ArrowLeft, Users, Search, MoreVertical, FileText, Settings, UserPlus } from "lucide-react"
+import { ArrowLeft, Users, Search, MoreVertical, FileText, Settings, UserPlus, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils"
 import { ClassFormDialog } from "./class-form-dialog"
 import { ManageStudentsDialog } from "./manage-students-dialog"
+import { ConfirmActionDialog } from "./confirm-action-dialog"
+import { createClient } from "@/utils/supabase/client"
+import { useRouter } from "next/navigation"
 
 interface Student {
   id: string
@@ -34,11 +37,34 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
   const [search, setSearch] = useState("")
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isManageOpen, setIsManageOpen] = useState(false)
+  
+  const [studentToRemove, setStudentToRemove] = useState<Student | null>(null)
+
+  const supabase = createClient()
+  const router = useRouter()
 
   const filteredStudents = students.filter(s => 
     s.full_name.toLowerCase().includes(search.toLowerCase()) || 
     s.email?.toLowerCase().includes(search.toLowerCase())
   )
+
+  const handleRemoveStudent = async () => {
+    if (!studentToRemove) return
+
+    const { error } = await supabase
+      .from('enrollments')
+      .delete()
+      .match({ 
+        class_id: classData.id, 
+        student_id: studentToRemove.id 
+      })
+
+    if (error) {
+      console.error("Error removing student:", error)
+    } else {
+      router.refresh()
+    }
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10 max-w-5xl mx-auto">
@@ -74,7 +100,8 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
              <Button 
                 variant="outline" 
                 onClick={() => setIsEditOpen(true)}
-                className="border-gray-200 text-gray-700 hover:bg-gray-50 font-montserrat rounded-xl h-11 cursor-pointer"
+                // Added floating hover effect
+                className="border-gray-200 text-gray-700 hover:bg-gray-50 font-montserrat rounded-xl h-11 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
              >
                 <Settings className="mr-2 h-4 w-4" /> Class Settings
              </Button>
@@ -120,7 +147,8 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
                
                <Button 
                  onClick={() => setIsManageOpen(true)}
-                 className="bg-[#17321A] hover:bg-[#146939] text-white rounded-xl h-10 px-4 font-montserrat text-xs shadow-md cursor-pointer whitespace-nowrap"
+                 // Changed color scheme to match Create Exam (Green)
+                 className="bg-[#146939] hover:bg-[#00954f] text-white rounded-xl h-10 px-4 font-montserrat text-xs shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer whitespace-nowrap"
                >
                  <UserPlus className="h-4 w-4 sm:mr-2" /> 
                  <span className="hidden sm:inline">Add Student</span>
@@ -165,11 +193,13 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl border-gray-100 shadow-lg">
-                            <DropdownMenuItem className="cursor-pointer font-roboto text-gray-600 focus:text-[#146939] focus:bg-[#e6f4ea] rounded-lg m-1">View Profile</DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer font-roboto text-gray-600 focus:text-[#146939] focus:bg-[#e6f4ea] rounded-lg m-1">Message</DropdownMenuItem>
-                            <div className="h-px bg-gray-100 my-1" />
-                            <DropdownMenuItem className="cursor-pointer font-roboto text-red-600 focus:text-red-700 focus:bg-red-50 rounded-lg m-1">Remove</DropdownMenuItem>
+                          <DropdownMenuContent align="end" className="rounded-xl border-gray-100 shadow-lg p-1">
+                            <DropdownMenuItem 
+                                onClick={() => setStudentToRemove(student)}
+                                className="cursor-pointer font-roboto text-red-600 focus:text-red-700 focus:bg-red-50 rounded-lg m-1"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" /> Remove from Class
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                      </div>
@@ -179,7 +209,6 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
              </div>
           </CardContent>
           
-          {/* Footer stats or pagination if needed later */}
           <div className="bg-gray-50/50 p-3 border-t border-gray-100 text-center text-xs text-gray-400 font-roboto">
             Showing {filteredStudents.length} of {students.length} students
           </div>
@@ -188,20 +217,28 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
 
       {/* --- Dialogs --- */}
       
-      {/* Edit Class Dialog */}
       <ClassFormDialog 
         open={isEditOpen} 
         onOpenChange={setIsEditOpen} 
         classToEdit={classData}
       />
 
-      {/* Add/Manage Students Dialog */}
       <ManageStudentsDialog
         open={isManageOpen}
         onOpenChange={setIsManageOpen}
         classId={classData.id}
         className={classData.name}
         allStudents={allStudents}
+      />
+
+      <ConfirmActionDialog 
+        open={!!studentToRemove}
+        onOpenChange={(open) => !open && setStudentToRemove(null)}
+        title="Remove Student"
+        description={`Are you sure you want to remove ${studentToRemove?.full_name} from ${classData.name}?`}
+        actionLabel="Remove"
+        variant="danger"
+        onConfirm={handleRemoveStudent}
       />
 
     </div>

@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Link from "next/link"
 import { ClassFormDialog } from "./class-form-dialog"
 import { ManageStudentsDialog } from "./manage-students-dialog"
-import { ConfirmActionDialog } from "./confirm-action-dialog" // Import the new dialog
+import { ConfirmActionDialog } from "./confirm-action-dialog"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -37,7 +37,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
   const [editingClass, setEditingClass] = useState<ClassItem | null>(null)
   const [managingClass, setManagingClass] = useState<ClassItem | null>(null)
   
-  // Confirmation Dialog State
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState<{ id: string, type: 'archive' | 'restore' } | null>(null)
 
@@ -48,13 +47,11 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
 
   const displayedClasses = classes.filter(cls => cls.status === view)
 
-  // Trigger the custom dialog instead of window.confirm
   const initiateToggleStatus = (classId: string, type: 'archive' | 'restore') => {
     setConfirmAction({ id: classId, type })
     setConfirmOpen(true)
   }
 
-  // The actual action executed by the dialog
   const executeToggleStatus = async () => {
     if (!confirmAction) return
 
@@ -75,7 +72,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       
-      {/* --- Header Section --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-200 pb-6">
         <div>
           <h1 className="text-4xl sm:text-5xl font-bold text-[#17321A] font-montserrat tracking-tight">
@@ -95,7 +91,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         </Button>
       </div>
 
-      {/* --- View Toggles --- */}
       <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-fit">
         <button
           onClick={() => setView('active')}
@@ -121,7 +116,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         </button>
       </div>
 
-      {/* --- Classes Grid --- */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {displayedClasses.length === 0 ? (
            <div className="col-span-full py-12 text-center text-gray-500 font-roboto border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
@@ -133,11 +127,9 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
               key={cls.id} 
               className={cn(
                 "group relative border shadow-sm hover:shadow-xl transition-all duration-300 ease-out bg-white overflow-hidden hover:-translate-y-2 flex flex-col justify-between",
-                // Reduced opacity slightly for archived items to distinguish them visually, but kept green bar
                 view === 'archived' ? "border-gray-200 opacity-95 grayscale-[10%]" : "border-gray-100"
               )}
             >
-              {/* Top Line: ALWAYS Green Gradient now */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
               <CardHeader className="flex flex-row items-start justify-between pb-2">
@@ -203,7 +195,10 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
                 <div className="flex items-center text-sm text-gray-500 font-roboto">
                   <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full">
                     <Users className="h-4 w-4 text-[#00954f]" />
-                    <span>{cls.student_count || 0} Students</span>
+                    {/* PLURALIZATION LOGIC FIXED HERE */}
+                    <span>
+                      {cls.student_count || 0} {cls.student_count === 1 ? "Student" : "Students"}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -223,7 +218,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
           ))
         )}
         
-        {/* Create Card (Active View Only) */}
         {view === 'active' && (
           <button 
             onClick={() => setIsCreateOpen(true)}
@@ -240,8 +234,7 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         )}
       </div>
 
-      {/* --- Dialogs --- */}
-      
+      {/* Dialogs */}
       <ClassFormDialog 
         open={isCreateOpen} 
         onOpenChange={setIsCreateOpen} 
@@ -263,17 +256,16 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         />
       )}
 
-      {/* Confirmation Dialog */}
       <ConfirmActionDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={confirmAction?.type === 'archive' ? "Archive Class" : "Restore Class"}
         description={confirmAction?.type === 'archive' 
-            ? "Are you sure you want to archive this class? It will be moved to the Archived tab and hidden from your main dashboard." 
+            ? "Are you sure you want to archive this class? It will be moved to the Archived tab." 
             : "Are you sure you want to restore this class? It will be moved back to your Active Classes list."}
         actionLabel={confirmAction?.type === 'archive' ? "Archive" : "Restore"}
         onConfirm={executeToggleStatus}
-        variant={confirmAction?.type === 'archive' ? 'danger' : 'default'}
+        variant={confirmAction?.type === 'archive' ? 'warning' : 'default'}
       />
       
     </div>

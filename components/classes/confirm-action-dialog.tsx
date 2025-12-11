@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { RefreshCcw, Archive, X, Loader2 } from "lucide-react"
+import { RefreshCcw, Archive, X, Loader2, Trash2, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -12,7 +12,7 @@ interface ConfirmActionDialogProps {
   description: string
   actionLabel: string
   onConfirm: () => Promise<void>
-  variant?: 'danger' | 'default'
+  variant?: 'danger' | 'warning' | 'default' // Added 'warning' to distinguish Amber from Red
 }
 
 export function ConfirmActionDialog({ 
@@ -52,6 +52,35 @@ export function ConfirmActionDialog({
 
   if (!isMounted) return null
 
+  // Determine colors based on variant
+  const getColors = () => {
+    switch (variant) {
+      case 'danger': // Red (Remove)
+        return {
+          gradient: "from-red-600 to-red-500",
+          iconBg: "bg-red-50 text-red-600",
+          button: "bg-red-600 hover:bg-red-700",
+          icon: <Trash2 className="h-6 w-6" />
+        }
+      case 'warning': // Amber (Archive)
+        return {
+          gradient: "from-amber-600 to-amber-500",
+          iconBg: "bg-amber-50 text-amber-600",
+          button: "bg-amber-600 hover:bg-amber-700",
+          icon: <Archive className="h-6 w-6" />
+        }
+      default: // Green (Restore/Default)
+        return {
+          gradient: "from-[#146939] to-[#00954f]",
+          iconBg: "bg-[#e6f4ea] text-[#146939]",
+          button: "bg-[#146939] hover:bg-[#00954f]",
+          icon: <RefreshCcw className="h-6 w-6" />
+        }
+    }
+  }
+
+  const styles = getColors()
+
   return (
     <div 
       className={cn(
@@ -65,13 +94,8 @@ export function ConfirmActionDialog({
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
         )}
       >
-        {/* Top Accent Line - Dynamic Color */}
-        <div className={cn(
-          "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r",
-          variant === 'danger' 
-            ? "from-amber-600 to-amber-500" 
-            : "from-[#146939] to-[#00954f]"
-        )}></div>
+        {/* Top Accent Line */}
+        <div className={cn("absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r", styles.gradient)}></div>
 
         {/* Close Button */}
         <button 
@@ -82,11 +106,8 @@ export function ConfirmActionDialog({
         </button>
 
         <div className="p-6 pt-8 text-center flex flex-col items-center">
-          <div className={cn(
-            "h-12 w-12 rounded-full flex items-center justify-center mb-4",
-            variant === 'danger' ? "bg-amber-50 text-amber-600" : "bg-[#e6f4ea] text-[#146939]"
-          )}>
-            {variant === 'danger' ? <Archive className="h-6 w-6" /> : <RefreshCcw className="h-6 w-6" />}
+          <div className={cn("h-12 w-12 rounded-full flex items-center justify-center mb-4", styles.iconBg)}>
+            {styles.icon}
           </div>
 
           <h3 className="text-xl font-bold font-montserrat text-[#17321A]">{title}</h3>
@@ -107,9 +128,7 @@ export function ConfirmActionDialog({
               disabled={loading}
               className={cn(
                 "flex-1 text-white font-montserrat h-10 shadow-md hover:shadow-lg transition-all rounded-xl cursor-pointer",
-                variant === 'danger' 
-                  ? "bg-amber-600 hover:bg-amber-700" 
-                  : "bg-[#146939] hover:bg-[#00954f]"
+                styles.button
               )}
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : actionLabel}
