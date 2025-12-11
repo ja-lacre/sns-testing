@@ -66,5 +66,7 @@ export async function updatePassword(formData: FormData) {
     return { error: error.message }
   }
 
+  await supabase.auth.signOut()
+  
   return { success: true }
 }
