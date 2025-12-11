@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { StudentFormDialog } from "./student-form-dialog"
-import { ImportStudentsDialog } from "./import-students-dialog" // Import new dialog
+import { ImportStudentsDialog } from "./import-students-dialog"
 import { ConfirmActionDialog } from "@/components/classes/confirm-action-dialog"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface Student {
   id: string
@@ -38,14 +39,14 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
   const [currentPage, setCurrentPage] = useState(1)
   
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [isImportOpen, setIsImportOpen] = useState(false) // State for import dialog
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [studentToEdit, setStudentToEdit] = useState<Student | null>(null)
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
 
   const router = useRouter()
   const supabase = createClient()
+  const { addToast } = useToast()
 
-  // ... (Previous handlers: handleAddClick, handleEditClick, handleRemoveStudent) ...
   const handleAddClick = () => {
     setStudentToEdit(null)
     setIsFormOpen(true)
@@ -59,8 +60,12 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
   const handleRemoveStudent = async () => {
     if (!studentToDelete) return
     const { error } = await supabase.from('students').delete().eq('id', studentToDelete.id)
-    if (error) console.error("Error removing student:", error)
-    else router.refresh()
+    if (error) {
+        addToast("Failed to delete student.", "error")
+    } else {
+        addToast("Student removed successfully.", "success")
+        router.refresh()
+    }
   }
 
   const filteredStudents = students.filter(s => 
@@ -96,7 +101,6 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
         </div>
         
         <div className="flex gap-3">
-          {/* Import Button */}
           <Button 
             onClick={() => setIsImportOpen(true)}
             variant="outline"
@@ -114,7 +118,7 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
         </div>
       </div>
 
-      {/* ... Table Implementation (Same as before) ... */}
+      {/* Table Card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -208,8 +212,8 @@ export function StudentsTable({ students, availableClasses }: StudentsTableProps
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination (Same as before) */}
+
+        {/* Pagination Footer */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/30">
             <p className="text-xs text-gray-500 font-roboto">

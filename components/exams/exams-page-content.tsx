@@ -11,6 +11,7 @@ import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface ExamItem {
   id: string
@@ -37,6 +38,7 @@ export function ExamsPageContent({ exams, availableClasses }: ExamsPageContentPr
 
   const supabase = createClient()
   const router = useRouter()
+  const { addToast } = useToast()
 
   const handleDeleteExam = async () => {
     if (!examToDelete) return
@@ -46,8 +48,13 @@ export function ExamsPageContent({ exams, availableClasses }: ExamsPageContentPr
       .delete()
       .eq('id', examToDelete.id)
 
-    if (error) console.error("Error deleting exam:", error)
-    else router.refresh()
+    if (error) {
+      console.error("Error deleting exam:", error)
+      addToast("Failed to delete exam.", "error")
+    } else {
+      addToast("Exam deleted successfully.", "success")
+      router.refresh()
+    }
   }
 
   return (
@@ -117,7 +124,6 @@ export function ExamsPageContent({ exams, availableClasses }: ExamsPageContentPr
             </CardContent>
 
             <CardFooter className="pt-4 border-t border-gray-50 mt-4 bg-gray-50/30 flex gap-2">
-               {/* INPUT SCORES BUTTON - Updated Colors to Match Create Exam */}
                <Link href={`/dashboard/results/${exam.id}`} className="w-full">
                  <Button 
                    className="w-full bg-[#146939] hover:bg-[#00954f] text-white font-montserrat text-xs font-bold rounded-xl h-10 shadow-md hover:shadow-lg transition-all cursor-pointer"
@@ -129,7 +135,6 @@ export function ExamsPageContent({ exams, availableClasses }: ExamsPageContentPr
           </Card>
         ))}
         
-        {/* Create New Exam Card */}
         <button 
           onClick={() => setIsCreateOpen(true)}
           className="flex flex-col items-center justify-center gap-4 min-h-[220px] rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#00954f] hover:bg-[#e6f4ea]/30 transition-all duration-300 group cursor-pointer text-gray-400 hover:text-[#00954f]"
@@ -144,7 +149,6 @@ export function ExamsPageContent({ exams, availableClasses }: ExamsPageContentPr
         </button>
       </div>
 
-      {/* Dialogs */}
       <ExamFormDialog 
         open={isCreateOpen || !!examToEdit} 
         onOpenChange={(open) => {

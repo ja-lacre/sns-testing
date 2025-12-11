@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface ClassItem {
   id: string
@@ -28,6 +29,7 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
   
   const router = useRouter()
   const supabase = createClient()
+  const { addToast } = useToast()
   const isEditing = !!classToEdit
 
   useEffect(() => {
@@ -72,7 +74,9 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
 
     if (error) {
       console.error(error)
+      addToast("Failed to save class details.", "error")
     } else {
+      addToast(isEditing ? "Class updated successfully." : "New class created successfully.", "success")
       onOpenChange(false)
       router.refresh()
     }
@@ -89,7 +93,6 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
     >
       <div 
         className={cn(
-          // Updated rounded-xl to rounded-2xl
           "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform",
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
         )}

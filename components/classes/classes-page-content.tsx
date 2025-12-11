@@ -12,6 +12,7 @@ import { ConfirmActionDialog } from "./confirm-action-dialog"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface ClassItem {
   id: string
@@ -44,6 +45,7 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
   
   const supabase = createClient()
   const router = useRouter()
+  const { addToast } = useToast()
 
   const displayedClasses = classes.filter(cls => cls.status === view)
 
@@ -63,15 +65,21 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
       .eq('id', confirmAction.id)
     
     if (!error) {
+      addToast(
+        confirmAction.type === 'archive' ? "Class archived successfully." : "Class restored successfully.", 
+        "success"
+      )
       router.refresh()
     } else {
       console.error(`Error ${confirmAction.type}ing class:`, error)
+      addToast("Action failed. Please try again.", "error")
     }
   }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-200 pb-6">
         <div>
           <h1 className="text-4xl sm:text-5xl font-bold text-[#17321A] font-montserrat tracking-tight">
@@ -91,6 +99,7 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         </Button>
       </div>
 
+      {/* View Toggles */}
       <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-fit">
         <button
           onClick={() => setView('active')}
@@ -116,6 +125,7 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         </button>
       </div>
 
+      {/* Classes Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {displayedClasses.length === 0 ? (
            <div className="col-span-full py-12 text-center text-gray-500 font-roboto border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
@@ -195,7 +205,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
                 <div className="flex items-center text-sm text-gray-500 font-roboto">
                   <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full">
                     <Users className="h-4 w-4 text-[#00954f]" />
-                    {/* PLURALIZATION LOGIC FIXED HERE */}
                     <span>
                       {cls.student_count || 0} {cls.student_count === 1 ? "Student" : "Students"}
                     </span>
@@ -234,7 +243,6 @@ export function ClassesPageContent({ classes, allStudents }: ClassesPageContentP
         )}
       </div>
 
-      {/* Dialogs */}
       <ClassFormDialog 
         open={isCreateOpen} 
         onOpenChange={setIsCreateOpen} 

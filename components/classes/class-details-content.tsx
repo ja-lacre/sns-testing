@@ -11,9 +11,10 @@ import { cn } from "@/lib/utils"
 import { ClassFormDialog } from "./class-form-dialog"
 import { ManageStudentsDialog } from "./manage-students-dialog"
 import { ConfirmActionDialog } from "./confirm-action-dialog"
-import { ExamFormDialog } from "@/components/exams/exam-form-dialog" // Import Exam Dialog
+import { ExamFormDialog } from "@/components/exams/exam-form-dialog"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface Student {
   id: string
@@ -38,12 +39,13 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
   const [search, setSearch] = useState("")
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isManageOpen, setIsManageOpen] = useState(false)
-  const [isExamOpen, setIsExamOpen] = useState(false) // New state for Exam Dialog
+  const [isExamOpen, setIsExamOpen] = useState(false)
   
   const [studentToRemove, setStudentToRemove] = useState<Student | null>(null)
 
   const supabase = createClient()
   const router = useRouter()
+  const { addToast } = useToast()
 
   const filteredStudents = students.filter(s => 
     s.full_name.toLowerCase().includes(search.toLowerCase()) || 
@@ -63,7 +65,9 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
 
     if (error) {
       console.error("Error removing student:", error)
+      addToast("Failed to remove student.", "error")
     } else {
+      addToast("Student removed from class successfully.", "success")
       router.refresh()
     }
   }
@@ -107,7 +111,6 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
                 <Settings className="mr-2 h-4 w-4" /> Class Settings
              </Button>
              
-             {/* Wired Up Create Exam Button */}
              <Button 
                 onClick={() => setIsExamOpen(true)}
                 className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat rounded-xl h-11 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer"
@@ -226,12 +229,11 @@ export function ClassDetailsContent({ classData, students, allStudents }: ClassD
         allStudents={allStudents}
       />
 
-      {/* New Exam Dialog Configured for this Class */}
       <ExamFormDialog
         open={isExamOpen}
         onOpenChange={setIsExamOpen}
-        availableClasses={[classData]} // Pass ONLY this class
-        defaultClassCode={classData.code} // Pre-select this class
+        availableClasses={[{ id: classData.id, name: classData.name, code: classData.code }]} 
+        defaultClassCode={classData.code}
       />
 
       <ConfirmActionDialog 

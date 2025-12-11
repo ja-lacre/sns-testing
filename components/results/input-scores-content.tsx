@@ -10,6 +10,7 @@ import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { ManageStudentsDialog } from "@/components/classes/manage-students-dialog"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface StudentScore {
   id: string
@@ -25,13 +26,13 @@ interface Exam {
   class_code: string
   date: string
   release_status: 'draft' | 'released'
-  class_id?: string // We need this for the Manage Students dialog
+  class_id?: string
 }
 
 interface InputScoresContentProps {
   exam: Exam
   students: StudentScore[]
-  allStudents: any[] // For the manage dialog
+  allStudents: any[]
   classId: string
 }
 
@@ -51,11 +52,10 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
   
   const supabase = createClient()
   const router = useRouter()
+  const { addToast } = useToast()
 
   const handleScoreChange = (studentId: string, val: string) => {
-    // Only allow numbers
     if (val === '' || /^\d+$/.test(val)) {
-        // Limit to 100 max
         if (val !== '' && parseInt(val) > 100) return
         setScores(prev => ({ ...prev, [studentId]: val }))
     }
@@ -68,19 +68,17 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
       exam_id: exam.id,
       student_id: studentId,
       score: score === '' ? null : parseInt(score),
-      // We don't change status here, only when releasing
     }))
 
-    // Using upsert (requires unique constraint on exam_id + student_id in DB)
-    // If you don't have a unique constraint, the delete/insert method is safer for now:
     await supabase.from('results').delete().eq('exam_id', exam.id)
     const { error } = await supabase.from('results').insert(upserts)
 
     setSaving(false)
     if (error) {
         console.error("Error saving scores:", error)
-        alert('Failed to save scores. Please try again.')
+        addToast("Failed to save scores.", "error")
     } else {
+        addToast("Scores saved successfully.", "success")
         router.refresh()
     }
   }
@@ -90,10 +88,8 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
     if (!confirm(`Are you sure you want to release these results? \n\n${filledScores} students will receive their scores immediately.`)) return
 
     setReleasing(true)
-    // First save any pending changes
     await handleSave()
 
-    // Update Exam Status
     const { error } = await supabase
       .from('exams')
       .update({ release_status: 'released', auto_release: false })
@@ -101,8 +97,9 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
 
     if (error) {
       console.error("Error releasing:", error)
-      alert("Failed to release results.")
+      addToast("Failed to release results.", "error")
     } else {
+      addToast("Results released successfully.", "success")
       setIsReleased(true)
       router.refresh()
     }
@@ -217,15 +214,14 @@ export function InputScoresContent({ exam, students, allStudents, classId }: Inp
         </div>
       </Card>
 
-      {/* Reuse the Manage Students Dialog to add students to the class (and thus the exam) */}
       <ManageStudentsDialog
         open={isManageOpen}
         onOpenChange={setIsManageOpen}
         classId={classId}
         className={exam.class_code}
         allStudents={allStudents}
-        title="Add Students"   // Custom Title
-        actionLabel="Add"      // Custom Button Label
+        title="Add Students"
+        actionLabel="Add"
       />
     </div>
   )

@@ -15,7 +15,8 @@ interface Exam {
   class_code: string
   date: string
   release_status: 'draft' | 'released'
-  student_count: number
+  student_count: number // Graded count
+  total_students: number // Total enrolled
 }
 
 interface ExamReleaseCardProps {
@@ -30,9 +31,12 @@ export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps
   const router = useRouter()
   const isReleased = exam.release_status === 'released'
 
+  // Calculate percentage for a progress bar effect (optional, or just for logic)
+  const isFullyGraded = exam.student_count >= exam.total_students
+
   const handleReleaseNow = async () => {
     if (disabled || isReleased) return;
-    if (!confirm(`Are you sure you want to release scores for "${exam.name}" to ${exam.student_count} students? Emails will be sent immediately.`)) return;
+    if (!confirm(`Are you sure you want to release scores for "${exam.name}"? Emails will be sent immediately.`)) return;
 
     setLoadingBtn(true)
     
@@ -56,7 +60,6 @@ export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps
       "group relative border shadow-sm transition-all duration-300 ease-out bg-white overflow-hidden rounded-2xl flex flex-col justify-between",
       disabled ? "border-gray-100 bg-gray-50/50" : "border-gray-100 hover:shadow-xl hover:-translate-y-2"
     )}>
-      {/* Top Gradient Line */}
       <div className={cn(
         "absolute top-0 left-0 w-full h-1.5 transition-opacity duration-300",
         disabled ? "bg-gray-200" : "bg-gradient-to-r from-[#146939] to-[#00954f] opacity-0 group-hover:opacity-100"
@@ -85,18 +88,25 @@ export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps
           <Calendar className="mr-2 h-4 w-4 text-[#146939]" />
           {new Date(exam.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
         </div>
+        
+        {/* Graded Count Display */}
         <div className="flex items-center text-sm font-roboto font-medium">
           <Users className="mr-2 h-4 w-4 text-[#146939]" />
-          <span>{exam.student_count} {exam.student_count === 1 ? "Student" : "Students"} graded</span>
+          <span>
+            <span className={cn(isFullyGraded ? "text-[#146939] font-bold" : "text-amber-600 font-bold")}>
+              {exam.student_count}
+            </span>
+            <span className="text-gray-400 mx-1">/</span>
+            <span>{exam.total_students} students graded</span>
+          </span>
         </div>
       </CardContent>
 
       <CardFooter className={cn(
-        "pt-4 pb-4 border-t border-gray-50 bg-gray-50/50 flex gap-2", // Reduced gap to 2
+        "pt-4 pb-4 border-t border-gray-50 bg-gray-50/50 flex gap-2",
         isReleased ? "opacity-80" : ""
       )}>
          
-         {/* Edit Scores Button - Flex 1 to share space */}
          <Link href={`/dashboard/results/${exam.id}`} className="flex-1">
             <Button 
                 disabled={disabled || isReleased}
@@ -107,7 +117,6 @@ export function ExamReleaseCard({ exam, disabled = false }: ExamReleaseCardProps
             </Button>
          </Link>
 
-         {/* Release Button - Flex 1 to share space */}
          <Button 
            onClick={handleReleaseNow}
            disabled={disabled || isReleased || loadingBtn}
