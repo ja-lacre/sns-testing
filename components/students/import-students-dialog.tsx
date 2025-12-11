@@ -29,7 +29,7 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
   useEffect(() => {
     if (open) {
       setIsMounted(true)
-      requestAnimationFrame(() => requestAnimationFrame(() => setIsVisible(true)))
+      requestAnimationFrame(() => setIsVisible(true))
     } else {
       setIsVisible(false)
       const timer = setTimeout(() => {
@@ -37,7 +37,7 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
         setFile(null)
         setError(null)
         setSuccessCount(0)
-      }, 300)
+      }, 500)
       return () => clearTimeout(timer)
     }
   }, [open])
@@ -53,7 +53,7 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
     const lines = text.split('\n')
     const students = []
     
-    // Skip header if present (basic check)
+    // Skip header
     const startIndex = lines[0].toLowerCase().includes('email') ? 1 : 0
 
     for (let i = startIndex; i < lines.length; i++) {
@@ -117,12 +117,12 @@ export function ImportStudentsDialog({ open, onOpenChange }: ImportStudentsDialo
 
   return (
     <div className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
+        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
-          "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform",
-          isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
+          "bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform",
+          isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
       )}>
         
         {/* Top Gradient Line */}

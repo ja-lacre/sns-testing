@@ -1,16 +1,38 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { LogOut, X, Loader2 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
-export function SignOutButton() {
+interface SignOutButtonProps {
+  className?: string
+  children?: React.ReactNode
+}
+
+export function SignOutButton({ className, children }: SignOutButtonProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Animation handling for the portal
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => setIsVisible(true))
+    } else {
+      setIsVisible(false)
+    }
+  }, [open])
 
   const handleSignOut = async () => {
     setLoading(true)
@@ -19,28 +41,43 @@ export function SignOutButton() {
     router.push('/login') 
   }
 
+  // Handle closing with animation delay
+  const handleClose = () => {
+    setIsVisible(false)
+    setTimeout(() => setOpen(false), 500) // Match duration
+  }
+
   return (
     <>
-      {/* The Sidebar Button */}
       <button 
         onClick={() => setOpen(true)}
-        className="flex items-center gap-3 px-4 py-3 w-full text-gray-500 hover:bg-gray-50 hover:text-[#17321A] transition-all rounded-xl group font-montserrat font-medium text-sm cursor-pointer"
+        className={cn(
+          "flex items-center gap-3 px-4 py-3 w-full text-gray-500 hover:bg-gray-50 hover:text-[#17321A] transition-all rounded-xl group font-montserrat font-medium text-sm cursor-pointer",
+          className
+        )}
       >
-        <LogOut className="h-5 w-5 group-hover:text-[#146939] transition-colors" />
-        Sign Out
+        {children || (
+          <>
+            <LogOut className="h-5 w-5 group-hover:text-[#146939] transition-colors" />
+            Sign Out
+          </>
+        )}
       </button>
 
-      {/* The Confirmation Popup */}
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200 scale-100">
+      {open && mounted && createPortal(
+        <div className={cn(
+            "fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
+            isVisible ? "opacity-100" : "opacity-0"
+        )}>
+          <div className={cn(
+              "bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform mx-4",
+              isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
+          )}>
             
-            {/* Top Accent Line (Amber for Log Out action) */}
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 to-orange-500"></div>
 
-            {/* Close Button */}
             <button 
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer"
             >
                 <X className="h-4 w-4" />
@@ -59,7 +96,7 @@ export function SignOutButton() {
                 <div className="flex w-full gap-3 mt-8">
                     <Button 
                         variant="ghost" 
-                        onClick={() => setOpen(false)}
+                        onClick={handleClose}
                         className="flex-1 font-montserrat h-10 rounded-xl text-gray-600 hover:text-[#17321A] hover:bg-gray-100 cursor-pointer"
                     >
                         Cancel
@@ -74,7 +111,8 @@ export function SignOutButton() {
                 </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

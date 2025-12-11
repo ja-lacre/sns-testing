@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react"
 import { UserCircle, Menu, LogOut } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { SignOutButton } from "@/components/dashboard/sign-out-button" // Import the component
 
 interface HeaderProps {
   onToggle: () => void
@@ -15,7 +14,6 @@ interface HeaderProps {
 export function Header({ onToggle, isSidebarOpen }: HeaderProps) {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const supabase = createClient()
-  const router = useRouter()
 
   useEffect(() => {
     const getUser = async () => {
@@ -26,13 +24,6 @@ export function Header({ onToggle, isSidebarOpen }: HeaderProps) {
     }
     getUser()
   }, [supabase])
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) console.error('Error signing out:', error)
-    router.push("/login")
-    router.refresh()
-  }
 
   return (
     <header className="bg-white border-b border-gray-200 h-16 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
@@ -68,15 +59,13 @@ export function Header({ onToggle, isSidebarOpen }: HeaderProps) {
           
           <UserCircle className="w-8 h-8 sm:w-9 sm:h-9 text-[#00954f]" />
 
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleSignOut}
-            className="flex text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors h-8 w-8 sm:h-9 sm:w-9"
-            title="Sign Out"
+          {/* Replaced manual button with SignOutButton component */}
+          <SignOutButton 
+            className="flex items-center justify-center p-0 w-auto h-auto bg-transparent hover:bg-red-50 text-red-500 hover:text-red-700 rounded-md transition-colors h-8 w-8 sm:h-9 sm:w-9"
           >
-            <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Button>
+             <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+          </SignOutButton>
+
         </div>
       </div>
     </header>

@@ -49,14 +49,10 @@ export function ManageStudentsDialog({
     if (open) {
       setIsMounted(true)
       fetchEnrollments()
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsVisible(true)
-        })
-      })
+      requestAnimationFrame(() => setIsVisible(true))
     } else {
       setIsVisible(false)
-      const timer = setTimeout(() => setIsMounted(false), 300)
+      const timer = setTimeout(() => setIsMounted(false), 500)
       return () => clearTimeout(timer)
     }
   }, [open, classId])
@@ -114,15 +110,18 @@ export function ManageStudentsDialog({
 
   return (
     <div className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
+        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
         isVisible ? "opacity-100" : "opacity-0"
     )}>
       <div className={cn(
-          "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform h-[80vh] flex flex-col",
-          isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
+          "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform h-[80vh] flex flex-col",
+          isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
       )}>
+        
+        {/* Top Green Accent Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
+        {/* Header */}
         <div className="px-6 pt-8 pb-4 flex justify-between items-start shrink-0">
           <div>
             <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
@@ -140,6 +139,7 @@ export function ManageStudentsDialog({
           </button>
         </div>
 
+        {/* Search Bar */}
         <div className="px-6 pb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -152,6 +152,7 @@ export function ManageStudentsDialog({
           </div>
         </div>
 
+        {/* Student List */}
         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
           {loading ? (
              <div className="flex flex-col justify-center items-center h-full text-gray-400 gap-2">

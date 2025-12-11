@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { RefreshCcw, Archive, X, Loader2, Trash2, AlertTriangle } from "lucide-react"
+import { RefreshCcw, Archive, X, Loader2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -12,7 +12,7 @@ interface ConfirmActionDialogProps {
   description: string
   actionLabel: string
   onConfirm: () => Promise<void>
-  variant?: 'danger' | 'warning' | 'default' // Added 'warning' to distinguish Amber from Red
+  variant?: 'danger' | 'warning' | 'default'
 }
 
 export function ConfirmActionDialog({ 
@@ -31,14 +31,10 @@ export function ConfirmActionDialog({
   useEffect(() => {
     if (open) {
       setIsMounted(true)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsVisible(true)
-        })
-      })
+      requestAnimationFrame(() => setIsVisible(true))
     } else {
       setIsVisible(false)
-      const timer = setTimeout(() => setIsMounted(false), 300)
+      const timer = setTimeout(() => setIsMounted(false), 500)
       return () => clearTimeout(timer)
     }
   }, [open])
@@ -55,21 +51,21 @@ export function ConfirmActionDialog({
   // Determine colors based on variant
   const getColors = () => {
     switch (variant) {
-      case 'danger': // Red (Remove)
+      case 'danger': // Red
         return {
           gradient: "from-red-600 to-red-500",
           iconBg: "bg-red-50 text-red-600",
           button: "bg-red-600 hover:bg-red-700",
           icon: <Trash2 className="h-6 w-6" />
         }
-      case 'warning': // Amber (Archive)
+      case 'warning': // Amber
         return {
           gradient: "from-amber-600 to-amber-500",
           iconBg: "bg-amber-50 text-amber-600",
           button: "bg-amber-600 hover:bg-amber-700",
           icon: <Archive className="h-6 w-6" />
         }
-      default: // Green (Restore/Default)
+      default: // Green
         return {
           gradient: "from-[#146939] to-[#00954f]",
           iconBg: "bg-[#e6f4ea] text-[#146939]",
@@ -84,14 +80,14 @@ export function ConfirmActionDialog({
   return (
     <div 
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
+        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500 ease-in-out",
         isVisible ? "opacity-100" : "opacity-0"
       )}
     >
       <div 
         className={cn(
-          "bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-300 ease-out transform",
-          isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
+          "bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] transform",
+          isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-90 translate-y-8 opacity-0"
         )}
       >
         {/* Top Accent Line */}

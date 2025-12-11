@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { LayoutDashboard, Users, GraduationCap, FileSpreadsheet, LogOut, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/utils/supabase/client"
+import { SignOutButton } from "./sign-out-button"
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -113,13 +114,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* --- Footer / Sign Out --- */}
         <div className="p-4 border-t border-[#146939]/50 bg-[#146939]/10">
-          <button 
-            onClick={handleSignOut}
-            className="flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-red-300 hover:text-red-200 hover:bg-red-500/10 rounded-xl transition-all duration-300 group font-montserrat cursor-pointer hover:shadow-inner"
-          >
-            <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            <span>Sign Out</span>
-          </button>
+          <SignOutButton />
           <p className="text-[10px] text-white text-center mt-3 font-roboto opacity-60">
               © 2025 CSci 153 Project - Jonhei Akiu Lacre
           </p>
