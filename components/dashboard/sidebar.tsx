@@ -36,9 +36,16 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       {/* --- Sidebar Aside --- */}
       <aside
         className={cn(
-          // FIX 1: 'overflow-hidden' here locks the outer container size
           "fixed inset-y-0 left-0 z-40 bg-[#17321A] text-white transition-all duration-300 ease-in-out shadow-xl flex flex-col overflow-hidden",
-          isOpen ? "w-64 translate-x-0" : "w-20 -translate-x-full lg:translate-x-0"
+          // FIX: Decoupled logic
+          // 1. Mobile Behavior: Always w-64. If closed, hide offscreen (-translate-x-full).
+          "w-64", 
+          isOpen ? "translate-x-0" : "-translate-x-full",
+
+          // 2. Desktop Behavior (lg): Always visible (translate-x-0).
+          // If closed, override width to w-20. If open, it stays w-64 (inherited from base).
+          "lg:translate-x-0",
+          !isOpen && "lg:w-20"
         )}
       >
         {/* Logo Area */}
@@ -53,10 +60,6 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         </div>
 
         {/* Nav Links */}
-        {/* FIX 2: Removed 'overflow-y-auto' and 'custom-scrollbar'.
-            Added 'overflow-hidden'. 
-            The sidebar is now completely static. If the list is too long, it will be clipped. 
-        */}
         <nav className="flex-1 py-6 px-3 space-y-2 overflow-hidden">
           {links.map((link) => {
             const Icon = link.icon
@@ -83,14 +86,17 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 
                 <span className={cn(
                   "font-montserrat font-medium whitespace-nowrap transition-all duration-300",
+                  // FIX: Ensure text hides cleanly on mobile when closed
                   isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 absolute left-14 hidden lg:block pointer-events-none"
                 )}>
                   {link.label}
                 </span>
 
+                {/* Tooltip for desktop mini-sidebar */}
                 {!isOpen && (
                     <div className={cn(
                       "absolute left-full top-1/2 -translate-y-1/2 ml-4 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 pointer-events-none transition-opacity z-50 whitespace-nowrap hidden",
+                      // Only show hover tooltip on desktop
                       "lg:group-hover:opacity-100 lg:group-hover:block lg:block"
                     )}>
                       {link.label}
