@@ -43,7 +43,9 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
     if (open) {
       setIsMounted(true)
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => setIsVisible(true))
+        requestAnimationFrame(() => {
+          setIsVisible(true)
+        })
       })
     } else {
       setIsVisible(false)
@@ -141,7 +143,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
                   defaultValue={examToEdit?.name}
                   placeholder="e.g. Midterm Physics" 
                   required 
-                  className="pl-9 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11"
+                  className="pl-9 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 font-roboto"
                 />
               </div>
             </div>
@@ -154,7 +156,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
                   name="classCode" 
                   defaultValue={examToEdit?.class_code || ""}
                   required
-                  className="w-full pl-3 pr-10 py-2 text-sm border border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 appearance-none cursor-pointer text-gray-700 outline-none"
+                  className="w-full pl-3 pr-10 py-2 text-sm border border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 appearance-none cursor-pointer text-gray-700 outline-none font-roboto"
                 >
                   <option value="" disabled>Select a class</option>
                   {availableClasses.map((cls) => (
@@ -163,7 +165,6 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
                     </option>
                   ))}
                 </select>
-                {/* Custom chevron if desired, or rely on browser default/custom style */}
                 <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
                 </div>
@@ -174,14 +175,14 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
               <div className="space-y-2">
                 <Label htmlFor="date" className="text-[#17321A] font-bold font-roboto text-sm">Date</Label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                   <Input 
                     id="date" 
                     name="date" 
                     type="date"
                     defaultValue={examToEdit?.date}
                     required 
-                    className="pl-9 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 w-full"
+                    className="pl-9 border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 w-full font-roboto accent-[#146939]"
                   />
                 </div>
               </div>
@@ -194,7 +195,7 @@ export function ExamFormDialog({ open, onOpenChange, availableClasses, examToEdi
                     name="status" 
                     defaultValue={examToEdit?.status || "Draft"}
                     required
-                    className="w-full px-3 py-2 text-sm border border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 appearance-none cursor-pointer text-gray-700 outline-none"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] bg-gray-50/50 rounded-xl h-11 appearance-none cursor-pointer text-gray-700 outline-none font-roboto"
                   >
                     <option value="Draft">Draft</option>
                     <option value="Scheduled">Scheduled</option>
