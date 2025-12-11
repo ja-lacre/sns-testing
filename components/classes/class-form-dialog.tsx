@@ -18,7 +18,7 @@ interface ClassItem {
 interface ClassFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  classToEdit?: ClassItem | null // If present, we are in Edit mode
+  classToEdit?: ClassItem | null
 }
 
 export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDialogProps) {
@@ -56,14 +56,12 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
     let error;
 
     if (isEditing && classToEdit) {
-      // Update existing class
       const result = await supabase
         .from('classes')
         .update({ name, code })
         .eq('id', classToEdit.id)
       error = result.error
     } else {
-      // Create new class
       const result = await supabase
         .from('classes')
         .insert({ name, code, status: 'active' })
@@ -85,7 +83,7 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
   return (
     <div 
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
+        "fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out",
         isVisible ? "opacity-100" : "opacity-0"
       )}
     >
@@ -95,50 +93,56 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
           isVisible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-4 opacity-0"
         )}
       >
-        {/* Header */}
-        <div className="bg-gradient-to-b from-[#146939] to-[#17321A] p-6 text-white flex justify-between items-center relative overflow-hidden">
-           <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#00954f] rounded-full opacity-20 blur-2xl pointer-events-none"></div>
+        {/* Top Green Accent Line */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#146939] to-[#00954f]"></div>
 
-          <div className="relative z-10">
-            <h2 className="text-xl font-bold font-montserrat">{isEditing ? "Edit Class" : "Create New Class"}</h2>
-            <p className="text-xs text-gray-200 font-roboto mt-1 opacity-80">
-              {isEditing ? "Update class details." : "Add a new course to your curriculum."}
+        {/* Header */}
+        <div className="px-6 pt-8 pb-2 flex justify-between items-start">
+          <div>
+            <h2 className="text-2xl font-bold font-montserrat text-[#17321A]">
+              {isEditing ? "Edit Class" : "Create New Class"}
+            </h2>
+            <p className="text-sm text-gray-500 font-roboto mt-1">
+              {isEditing ? "Update the course details below." : "Enter the details for your new course."}
             </p>
           </div>
           <button 
             onClick={() => onOpenChange(false)} 
-            className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors relative z-10 cursor-pointer"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors cursor-pointer -mr-2 -mt-2"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="p-6 space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-[#17321A] font-bold font-roboto">Class Name</Label>
-            <Input 
-              id="name" 
-              name="name" 
-              defaultValue={classToEdit?.name}
-              placeholder="e.g. Advanced Chemistry" 
-              required 
-              className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="code" className="text-[#17321A] font-bold font-roboto">Course Code</Label>
-            <Input 
-              id="code" 
-              name="code" 
-              defaultValue={classToEdit?.code}
-              placeholder="e.g. CHEM-301" 
-              required 
-              className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11"
-            />
+        {/* Form */}
+        <form onSubmit={onSubmit} className="p-6 space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-[#17321A] font-bold font-roboto text-sm">Class Name</Label>
+              <Input 
+                id="name" 
+                name="name" 
+                defaultValue={classToEdit?.name}
+                placeholder="e.g. Advanced Chemistry" 
+                required 
+                className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 bg-gray-50/50"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="code" className="text-[#17321A] font-bold font-roboto text-sm">Course Code</Label>
+              <Input 
+                id="code" 
+                name="code" 
+                defaultValue={classToEdit?.code}
+                placeholder="e.g. CHEM-301" 
+                required 
+                className="border-gray-200 focus:border-[#00954f] focus:ring-[#00954f] h-11 bg-gray-50/50"
+              />
+            </div>
           </div>
 
-          <div className="pt-4 flex justify-end gap-3">
+          <div className="pt-2 flex justify-end gap-3">
             <Button 
               type="button" 
               variant="ghost" 
@@ -150,7 +154,7 @@ export function ClassFormDialog({ open, onOpenChange, classToEdit }: ClassFormDi
             <Button 
               type="submit" 
               disabled={loading}
-              className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat min-w-[140px] h-11 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+              className="bg-[#146939] hover:bg-[#00954f] text-white font-montserrat min-w-[140px] h-11 shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
